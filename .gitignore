@@ -2,3 +2,5 @@ app
 /.vscode
 /main.dSYM
 /app.dSYM
+.DS_Store
+.gitignore
