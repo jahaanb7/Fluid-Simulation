@@ -55,7 +55,11 @@ int main(){
     return -1;
   }
 
-  glViewport(0, 0, WIDTH, HEIGHT);
+  // Mac does not support this Retina displays
+  int fbWidth, fbHeight;
+  glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
+
+  glViewport(0, 0, fbWidth, fbHeight);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
   
   // Depth Test (DepthBuffer)
@@ -65,7 +69,7 @@ int main(){
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
 
-  Particle particle = Particle(glm::vec2(0.0f, 0.0f), glm::vec2(0.0f, 0.0f));
+  Particle particle = Particle(glm::vec2(400.0f, 400.0f), glm::vec2(0.0f, 0.0f));
   
   // Render loop: handles user events and inputs
   while(!glfwWindowShouldClose(window)){
@@ -75,8 +79,8 @@ int main(){
     double deltaTime = currentTime - lastFrame;
     lastFrame = currentTime;
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Perspective Projection (Perspective Matrix)
     glm::mat4 projection = glm::perspective(fov, aspectRatio, nearPlane, farPlane);
@@ -104,7 +108,7 @@ int main(){
     GLfloat light[] = {camPosition.x, camPosition.y, camPosition.z, 1.0f};
     glLightfv(GL_LIGHT0, GL_POSITION, light);
 
-    particle.drawParticle(50.0f, 20.0);
+    particle.drawParticle(20.0f, 20);
 
     glfwSwapBuffers(window);
     glfwPollEvents();    
