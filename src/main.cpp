@@ -69,7 +69,7 @@ int main(){
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
 
-  Particle particle = Particle(glm::vec2(400.0f, 400.0f), glm::vec2(0.0f, 0.0f));
+  Particle particle = Particle(glm::vec2(400.0f, 400.0f), glm::vec2(0.0f, 0.0f), 20);
   
   // Render loop: handles user events and inputs
   while(!glfwWindowShouldClose(window)){
@@ -108,7 +108,13 @@ int main(){
     GLfloat light[] = {camPosition.x, camPosition.y, camPosition.z, 1.0f};
     glLightfv(GL_LIGHT0, GL_POSITION, light);
 
-    particle.drawParticle(20.0f, 20);
+
+    int rows = 5;
+    int cols = 4;
+
+    drawParticleGrid(rows, cols, 50.0f, particle);
+
+    //particle.drawParticleGrid(rows, cols, 6.0f);
 
     glfwSwapBuffers(window);
     glfwPollEvents();    
