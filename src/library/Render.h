@@ -22,11 +22,38 @@ void drawParticleGrid(int rows, int columns, float spacing, Particle& particle){
 }
 
 void update(float deltaTime, int WIDTH, int HEIGHT){
-    for(auto& particle : particles){
-      particle.updatePosition(deltaTime);
-      particle.boundaryCollision(WIDTH/2.0f, HEIGHT/2.0f);
-      particle.drawParticle();
+  for(auto& particle : particles){
+    particle.updatePosition(deltaTime);
   }
+
+  float damping = 0.95f;
+
+  for(int i = 0; i < particles.size(); i++){
+    for(int j = i + 1; j < particles.size(); j++){
+
+      glm::vec2 distanceOfParticles = particles[j].position - particles[i].position;
+      float distance = glm::length(distanceOfParticles);
+      float sumOfRadius = particles[i].radius + particles[j].radius;
+
+      if(distance < sumOfRadius){
+        glm::vec2 temp = particles[i].velocity;
+        particles[i].velocity = particles[j].velocity * damping;
+        particles[j].velocity = temp * damping;
+
+        glm::vec2 normal = glm::normalize(distanceOfParticles);
+        float overlap = sumOfRadius - distance;
+
+        particles[i].position -= normal * (overlap * 0.5f);
+        particles[j].position += normal * (overlap * 0.5f);
+      }
+    }
+  }
+
+  for(auto& particle : particles){
+    particle.boundaryCollision(WIDTH/2.0f, HEIGHT/2.0f);
+    particle.drawParticle();
+  }
+
 }
 
 // 2D Boundary Box - collision and containment

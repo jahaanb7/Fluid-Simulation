@@ -12,20 +12,25 @@
 
 //Global Variables:
 
+//screen dimensions
 int const WIDTH = 800.0f;
 int const HEIGHT = 800.0f;
 
-double lastFrame = 0.0f; 
-
+// Variables for projection matrix
 float fov = glm::radians(60.0f);
 float aspectRatio = WIDTH / HEIGHT;
 float nearPlane =  0.1f;
-float farPlane = 2000.0f;
+float farPlane = 5000.0f;
 
-bool mouseLock = true;
+// Disable mouse movement
+bool mouseLock = false;
 
-int rows = 5;
-int cols = 4;
+// Variables for particle grid arrangement
+int rows = 10;
+int cols = 100;
+float spacing = 5;
+
+double lastFrame = 0.0f; 
 
 
 //Initialize camera
@@ -74,9 +79,9 @@ int main(){
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
 
-  Particle particle = Particle(glm::vec2(0.0f, 0.0f), glm::vec2(0.0f, 0.0f), 20);
+  Particle particle = Particle(glm::vec2(-350.0f, 200.0f), glm::vec2(0.0f, 0.0f), 5);
 
-  drawParticleGrid(rows, cols, 50.0f, particle);
+  drawParticleGrid(rows, cols, spacing, particle);
 
   // Render loop: handles user events and inputs
   while(!glfwWindowShouldClose(window)){
@@ -116,7 +121,7 @@ int main(){
     glLightfv(GL_LIGHT0, GL_POSITION, light);
 
     update(deltaTime, WIDTH, HEIGHT);
-    drawBoundaryBox(WIDTH, HEIGHT, 0.0f);
+    drawBoundaryBox(WIDTH, HEIGHT, HEIGHT/2);
 
     glfwSwapBuffers(window);
     glfwPollEvents();    
