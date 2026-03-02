@@ -10,6 +10,11 @@ class Particle{
     glm::vec2 position;
     glm::vec2 velocity;
 
+    glm::vec2 acceleration = glm::vec2(0.0f, -98.1f);
+
+    float density;
+    float mass;
+
     // variables for rendering
     int radius;
     int numSegments = 20;
@@ -19,6 +24,18 @@ class Particle{
       velocity = vel;
       radius = r;
     }
+
+  void updatePosition(float deltaTime){
+    position += velocity * deltaTime + 0.5f * acceleration * deltaTime * deltaTime;
+    velocity += acceleration * deltaTime;
+  }
+
+  void boundaryCollision(int screenWidth, int screenHeight){
+    if(position.y > (screenHeight - radius)){
+      position.y = screenHeight - radius;
+      velocity.y *= -1.0f;    
+    }
+  }
 
   void drawParticle(){
 
