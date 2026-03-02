@@ -31,9 +31,24 @@ class Particle{
   }
 
   void boundaryCollision(int screenWidth, int screenHeight){
-    if(position.y > (screenHeight - radius)){
-      position.y = screenHeight - radius;
-      velocity.y *= -1.0f;    
+    if(position.x + radius > screenWidth){
+        position.x = screenWidth - radius;
+        velocity.x *= -1;
+    }
+
+    if(position.x - radius < -screenWidth){
+        position.x = -screenWidth + radius;
+        velocity.x *= -1;
+    }
+
+    if(position.y + radius > screenHeight){
+        position.y = screenHeight - radius;
+        velocity.y *= -1;
+    }
+
+    if(position.y - radius < -screenHeight){
+        position.y = -screenHeight + radius;
+        velocity.y *= -1;
     }
   }
 

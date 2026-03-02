@@ -24,9 +24,12 @@ float farPlane = 2000.0f;
 
 bool mouseLock = true;
 
+int rows = 5;
+int cols = 4;
+
 
 //Initialize camera
-Camera cam(400.0f, 300.0f, 900.0f, 10.0f, mouseLock);
+Camera cam(0.0f, 0.0f, 1000.0f, 10.0f, mouseLock);
 
 // resize the window
 void framebuffer_size_callback(GLFWwindow* window, int width, int height){
@@ -71,13 +74,10 @@ int main(){
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
 
-  Particle particle = Particle(glm::vec2(400.0f, 400.0f), glm::vec2(0.0f, 0.0f), 20);
+  Particle particle = Particle(glm::vec2(0.0f, 0.0f), glm::vec2(0.0f, 0.0f), 20);
 
-      int rows = 5;
-    int cols = 4;
+  drawParticleGrid(rows, cols, 50.0f, particle);
 
-    drawParticleGrid(rows, cols, 50.0f, particle);
-  
   // Render loop: handles user events and inputs
   while(!glfwWindowShouldClose(window)){
 
@@ -116,8 +116,7 @@ int main(){
     glLightfv(GL_LIGHT0, GL_POSITION, light);
 
     update(deltaTime, WIDTH, HEIGHT);
-
-    //particle.drawParticleGrid(rows, cols, 6.0f);
+    drawBoundaryBox(WIDTH, HEIGHT, 0.0f);
 
     glfwSwapBuffers(window);
     glfwPollEvents();    
