@@ -5,34 +5,35 @@ std::vector<Particle> particles;
 
 void VerletIntegration(Particle& particle, float deltaTime){
     
-    glm::vec2 oldAcceleration = particle.acceleration;
+    glm::vec3 oldAcceleration = particle.acceleration;
     particle.position += particle.velocity * deltaTime + 0.5f * oldAcceleration * deltaTime * deltaTime;
 
-    particle.acceleration = glm::vec2(0.0f, -98.0f);
+    particle.acceleration = glm::vec3(0.0f, -98.0f, 0.0f);
     particle.velocity += 0.5f * (oldAcceleration + particle.acceleration) * deltaTime;
 }
 
-void drawParticleGrid(int rows, int columns, float spacing, Particle& particle){
-  
+void drawParticleGrid3D(int rows, int columns, int zRange, float spacing, Particle& particle){
   particles.clear();
-  particles.reserve(rows*columns);
+  particles.reserve(rows*columns*zRange);
 
-  for(int i = 0; i < rows; i++){
-    for(int j = 0; j < columns; j++){
-      
-      glm::vec2 gridPosition = {
-        particle.position.x + (j * spacing),  // x moves with column
-        particle.position.y + (i * spacing)   // y moves with row
-      };
-      
-      particles.emplace_back(gridPosition, particle.velocity, particle.radius);
+  for(int z = 0; z < zRange; z++){
+    for(int i = 0; i < rows; i++){
+      for(int j = 0; j < columns; j++){
+
+        glm::vec3 gridPosition = {
+          particle.position.x + (j * spacing), // x moves with column
+          particle.position.y + (i * spacing), // y moves with row
+          particle.position.z + (z * spacing)  // z moves with zRange
+        };
+
+        particles.emplace_back(gridPosition, particle.velocity, particle.radius);
+      }
     }
   }
 }
 
-void update(float deltaTime, int WIDTH, int HEIGHT){
+void update(float deltaTime, int WIDTH, int HEIGHT, int DEPTH){
   for(auto& particle : particles){
-    particle.acceleration = glm::vec2(0.0f, -98.0f);
     VerletIntegration(particle, deltaTime);
   }
 
@@ -41,16 +42,16 @@ void update(float deltaTime, int WIDTH, int HEIGHT){
   for(int i = 0; i < particles.size(); i++){
     for(int j = i + 1; j < particles.size(); j++){
 
-      glm::vec2 distanceOfParticles = particles[j].position - particles[i].position;
+      glm::vec3 distanceOfParticles = particles[j].position - particles[i].position;
       float distance = glm::length(distanceOfParticles);
       float sumOfRadius = particles[i].radius + particles[j].radius;
 
       if(distance < sumOfRadius){
-        glm::vec2 temp = particles[i].velocity;
+        glm::vec3 temp = particles[i].velocity;
         particles[i].velocity = particles[j].velocity * damping;
         particles[j].velocity = temp * damping;
 
-        glm::vec2 normal = glm::normalize(distanceOfParticles);
+        glm::vec3 normal = glm::normalize(distanceOfParticles);
         float overlap = sumOfRadius - distance;
 
         particles[i].position -= normal * (overlap * 0.5f);
@@ -60,8 +61,8 @@ void update(float deltaTime, int WIDTH, int HEIGHT){
   }
 
   for(auto& particle : particles){
-    particle.boundaryCollision(WIDTH/2.0f, HEIGHT/2.0f);
-    particle.drawParticle();
+    particle.boundaryCollision(WIDTH/2.0f, HEIGHT/2.0f, DEPTH/2.0f);
+    particle.drawParticle3D(5, 5);
   }
 
 }

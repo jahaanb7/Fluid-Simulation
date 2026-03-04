@@ -5,7 +5,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "library/Render.h"
+#include "library/Physics.h"
 #include "library/Particle.h"
 #include "library/Camera.h"
 
@@ -13,8 +13,9 @@
 //Global Variables:
 
 //screen dimensions
-int const WIDTH = 800.0f;
-int const HEIGHT = 800.0f;
+int const WIDTH = 800;
+int const HEIGHT = 800;
+int const DEPTH = 800;
 
 // Variables for projection matrix
 float fov = glm::radians(60.0f);
@@ -26,8 +27,9 @@ float farPlane = 5000.0f;
 bool mouseLock = false;
 
 // Variables for particle grid arrangement
-int rows = 3;
-int cols = 100;
+int rows = 10;
+int cols = 5;
+int zRange = 50;
 float spacing = 5;
 
 double lastFrame = 0.0f; 
@@ -78,9 +80,9 @@ int main(){
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
 
-  Particle particle = Particle(glm::vec2(-350.0f, 200.0f), glm::vec2(3.0f, 40.0f), 5);
+  Particle particle = Particle(glm::vec3(-350.0f, 200.0f, 0.0f), glm::vec3(3.0f, 40.0f, 0.0f), 5);
 
-  drawParticleGrid(rows, cols, spacing, particle);
+  drawParticleGrid3D(rows, cols, zRange, spacing, particle);
 
   // Render loop: handles user events and inputs
   while(!glfwWindowShouldClose(window)){
@@ -119,8 +121,8 @@ int main(){
     GLfloat light[] = {camPosition.x, camPosition.y, camPosition.z, 1.0f};
     glLightfv(GL_LIGHT0, GL_POSITION, light);
 
-    update(deltaTime, WIDTH, HEIGHT);
-    drawBoundaryBox(WIDTH, HEIGHT, HEIGHT/2);
+    update(deltaTime, WIDTH, HEIGHT, DEPTH);
+    drawBoundaryBox(WIDTH, HEIGHT, DEPTH/2.0f);
 
     glfwSwapBuffers(window);
     glfwPollEvents();    
