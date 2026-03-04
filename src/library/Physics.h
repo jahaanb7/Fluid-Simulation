@@ -3,6 +3,15 @@
 
 std::vector<Particle> particles;
 
+void VerletIntegration(Particle& particle, float deltaTime){
+    
+    glm::vec2 oldAcceleration = particle.acceleration;
+    particle.position += particle.velocity * deltaTime + 0.5f * oldAcceleration * deltaTime * deltaTime;
+
+    particle.acceleration = glm::vec2(0.0f, -98.0f);
+    particle.velocity += 0.5f * (oldAcceleration + particle.acceleration) * deltaTime;
+}
+
 void drawParticleGrid(int rows, int columns, float spacing, Particle& particle){
   
   particles.clear();
@@ -23,7 +32,8 @@ void drawParticleGrid(int rows, int columns, float spacing, Particle& particle){
 
 void update(float deltaTime, int WIDTH, int HEIGHT){
   for(auto& particle : particles){
-    particle.updatePosition(deltaTime);
+    particle.acceleration = glm::vec2(0.0f, -98.0f);
+    VerletIntegration(particle, deltaTime);
   }
 
   float damping = 0.95f;

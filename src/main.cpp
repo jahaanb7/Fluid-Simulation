@@ -26,12 +26,11 @@ float farPlane = 5000.0f;
 bool mouseLock = false;
 
 // Variables for particle grid arrangement
-int rows = 10;
+int rows = 3;
 int cols = 100;
 float spacing = 5;
 
 double lastFrame = 0.0f; 
-
 
 //Initialize camera
 Camera cam(0.0f, 0.0f, 1000.0f, 10.0f, mouseLock);
@@ -79,7 +78,7 @@ int main(){
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
 
-  Particle particle = Particle(glm::vec2(-350.0f, 200.0f), glm::vec2(0.0f, 0.0f), 5);
+  Particle particle = Particle(glm::vec2(-350.0f, 200.0f), glm::vec2(3.0f, 40.0f), 5);
 
   drawParticleGrid(rows, cols, spacing, particle);
 
