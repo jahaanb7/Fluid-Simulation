@@ -10,7 +10,7 @@
 #include "library/Camera.h"
 
 
-//Global Variables:
+// Global Variables:
 
 //screen dimensions
 int const WIDTH = 800;
@@ -18,19 +18,19 @@ int const HEIGHT = 800;
 int const DEPTH = 800;
 
 // Variables for projection matrix
-float fov = glm::radians(60.0f);
-float aspectRatio = WIDTH / HEIGHT;
-float nearPlane =  0.1f;
-float farPlane = 5000.0f;
+const float fov = glm::radians(60.0f);
+const float aspectRatio = WIDTH / HEIGHT;
+const float nearPlane =  0.1f;
+const float farPlane = 5000.0f;
 
 // Disable mouse movement
 bool mouseLock = false;
 
 // Variables for particle grid arrangement
-int rows = 3;
-int cols = 10;
-int zRange = 10;
-float spacing = 10;
+const int rows = 3;
+const int cols = 10;
+const int zRange = 10;
+const float spacing = 5;
 
 double lastFrame = 0.0f; 
 

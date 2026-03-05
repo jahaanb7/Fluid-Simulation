@@ -9,16 +9,17 @@ class Fluid : public Particle{
   public:
 
     // Properties of fluids
-    float viscosity;
-    float volume;
-    float mass;
+    const float viscosity = 0.1f;
+    const float restDensity = 1000.0f;
+    const float stiffness = 200.0f;
 
-    float h;
+    //smoothing radius for kernel
+    const float h = 12.0f;
 
     glm::vec3 Force;
     glm::vec3 Color;
 
-
+    
   /*
   SPH (Smooth Particle Hydrodynamics)
 
@@ -47,7 +48,7 @@ class Fluid : public Particle{
   }
 
   // calculates for pressure force
-  float SpikyKernel(Particle j){
+  glm::vec3 SpikyKernel(Particle j){
 
     glm::vec3 distanceOfParticles = position - j.position;
     float r = glm::length(distanceOfParticles);
@@ -56,8 +57,21 @@ class Fluid : public Particle{
 
     if(r < h){
       float scalar = -(45.0f / (M_PI * pow(h, 6.0f))) * (pow((h - r), 2.0f));
-      glm::vec3 kernel =  scalar * unitVector;
+      glm::vec3 kernel = scalar * unitVector;
+
+      return kernel;
     }
+  }
+
+  // calculates for viscosity
+  float LaplacianKernel(Particle j){
+
+    glm::vec3 distanceOfParticles = position - j.position;
+    float r = glm::length(distanceOfParticles);
+    
+    float kernel = (45.0f / (M_PI * pow(h, 6))) * (h - r);
+    
+    return kernel;
   }
 
   float getDensity(){
@@ -65,7 +79,7 @@ class Fluid : public Particle{
   }
 
   float getPressure(){
-    
+
   }
 
 };
