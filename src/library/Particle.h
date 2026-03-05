@@ -7,17 +7,15 @@
 
 class Particle{
   public:
+
+    //particle variables
     glm::vec3 position;
     glm::vec3 velocity;
-
     glm::vec3 acceleration;
 
+    // properties of particles
     float density;
-    float mass;
-
-    // variables for rendering
     int radius;
-    int numSegments = 20;
 
     Particle(glm::vec3 pos, glm::vec3 vel, int r){
       position = pos;
@@ -63,7 +61,7 @@ class Particle{
     }
   }
 
-  void drawParticle(){
+  void drawParticle(int numSegments){
 
     glm::vec2 center = glm::vec2(position.x, position.y);
 

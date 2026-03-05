@@ -27,10 +27,10 @@ float farPlane = 5000.0f;
 bool mouseLock = false;
 
 // Variables for particle grid arrangement
-int rows = 10;
-int cols = 5;
-int zRange = 50;
-float spacing = 5;
+int rows = 3;
+int cols = 10;
+int zRange = 10;
+float spacing = 10;
 
 double lastFrame = 0.0f; 
 
