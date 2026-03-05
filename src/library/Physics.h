@@ -8,8 +8,6 @@ void VerletIntegration(Particle& particle, float deltaTime){
     
     glm::vec3 oldAcceleration = particle.acceleration;
     particle.position += particle.velocity * deltaTime + 0.5f * oldAcceleration * deltaTime * deltaTime;
-
-    particle.acceleration = glm::vec3(0.0f, -98.0f, 0.0f);
     particle.velocity += 0.5f * (oldAcceleration + particle.acceleration) * deltaTime;
 }
 
@@ -17,14 +15,18 @@ void drawParticleGrid3D(int rows, int columns, int zRange, float spacing, Partic
   fluid.particles.clear();
   fluid.particles.reserve(rows*columns*zRange);
 
+  float offsetX = (columns - 1) * spacing/2.0f;
+  float offsetY = (rows - 1) * spacing/2.0f;
+  float offsetZ = (zRange - 1) * spacing/2.0f;
+
   for(int z = 0; z < zRange; z++){
     for(int i = 0; i < rows; i++){
       for(int j = 0; j < columns; j++){
 
         glm::vec3 gridPosition = {
-          particle.position.x + (j * spacing), // x moves with column
-          particle.position.y + (i * spacing), // y moves with row
-          particle.position.z + (z * spacing)  // z moves with zRange
+          particle.position.x + (j * spacing) - offsetX, // x moves with column
+          particle.position.y + (i * spacing) - offsetY, // y moves with row
+          particle.position.z + (z * spacing) - offsetZ  // z moves with zRange
         };
 
         fluid.particles.emplace_back(gridPosition, particle.velocity, particle.radius);

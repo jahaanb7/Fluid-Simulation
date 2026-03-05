@@ -27,10 +27,10 @@ const float farPlane = 5000.0f;
 bool mouseLock = false;
 
 // Variables for particle grid arrangement
-const int rows = 3;
-const int cols = 10;
-const int zRange = 10;
-const float spacing = 5;
+const int rows = 7;
+const int cols = 7;
+const int zRange = 7;
+const float spacing = 30.0f;
 
 double lastFrame = 0.0f; 
 
@@ -80,7 +80,7 @@ int main(){
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
 
-  Particle particle = Particle(glm::vec3(-350.0f, 200.0f, 0.0f), glm::vec3(3.0f, 40.0f, 0.0f), 5);
+  Particle particle = Particle(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), 5);
 
   drawParticleGrid3D(rows, cols, zRange, spacing, particle);
 
@@ -90,6 +90,7 @@ int main(){
     // deltaTime - frames per second (0.000167)
     double currentTime = glfwGetTime();
     double deltaTime = currentTime - lastFrame;
+    deltaTime = std::min(deltaTime, 0.016);  // cap at 16ms (60fps)
     lastFrame = currentTime;
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -109,7 +110,7 @@ int main(){
     glm::vec3 forward = cam.get_kHat();
     glm::vec3 up = cam.get_jHat();
     
-    cam.MoveCamera(window, deltaTime);
+    cam.MoveCamera(window, deltaTime*5);
 
     glm::mat4 view = glm::lookAt(camPosition, camPosition + forward, up);
 

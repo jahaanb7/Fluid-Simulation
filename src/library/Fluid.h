@@ -1,3 +1,4 @@
+#include <iostream>
 #include <glm/glm.hpp>
 #include <GLFW/glfw3.h>
 #include <vector>
@@ -13,11 +14,11 @@ class Fluid{
 
     // Properties of fluids
     const float viscosity = 0.1f;
-    const float restDensity = 1000.0f;
-    const float stiffness = 200.0f;
+    const float restDensity = 0.00345233;
+    const float stiffness = 90.0f;
 
     //smoothing radius for kernel
-    const float h = 12.0f;
+    const float h = 80.0f;
 
     glm::vec3 Force;
     glm::vec3 Color;
@@ -122,25 +123,33 @@ class Fluid{
       glm::vec3 totalForce = glm::vec3(0.0f);
 
       for(int j = 0; j < particles.size(); j++){
-        
-        Particle i1 = particles[i];
-        Particle j1 = particles[j];
 
-        glm::vec3 viscosityForce = (viscosity*(j1.mass)) * ((j1.velocity - i1.velocity)/i1.density) * LaplacianKernel(i1, j1);
-        glm::vec3 pressureForce = -j1.mass * ((i1.pressure + j1.pressure)/(2*j1.density)) * SpikyKernel(i1, j1);
+        if(i == j) continue;
+        
+        Particle& i1 = particles[i];
+        Particle& j1 = particles[j];
+
+        glm::vec3 viscosityForce = (viscosity*(j1.mass)) * ((j1.velocity - i1.velocity)/j1.density) * LaplacianKernel(i1, j1);
+        glm::vec3 pressureForce = j1.mass * ((i1.pressure + j1.pressure)/(2*j1.density)) * SpikyKernel(i1, j1);
 
         totalForce += viscosityForce + pressureForce;
       }
 
-      glm::vec3 gravityForce = glm::vec3(0.0f, -98.0f, 0.0f) * particles[i].density;
+      glm::vec3 gravityForce = glm::vec3(0.0f, -0.98f, 0.0f) * particles[i].mass;
 
       particles[i].acceleration = (totalForce + gravityForce) / particles[i].density;
     }
   }
 
   void updateFluid(){
-    getDensity();        
-    getPressure();      
+    getDensity();   
+    
+    std::cout << "density[0]: " << particles[0].density << std::endl;     
+
+    getPressure();   
+    
+    std::cout << "pressure[0]: " << particles[0].pressure << std::endl;
+
     computeTotalForce();
   }
 

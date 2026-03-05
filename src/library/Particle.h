@@ -25,12 +25,9 @@ class Particle{
       radius = r;
 
       // set values for fluid properties
-      mass = 5.0f;
+      mass = 1.0f;
       density = 0.0f;
       pressure = 0.0f;
-
-      // gravitational acceleration
-      acceleration = glm::vec3(0.0f, -98.0f, 0.0f);
     }
 
   void updatePosition(float deltaTime){
@@ -41,31 +38,31 @@ class Particle{
   void boundaryCollision(int screenWidth, int screenHeight, int screenDepth){
     if(position.x + radius > screenWidth){
         position.x = screenWidth - radius;
-        velocity.x *= -1;
+        velocity.x *= -0.20;
     }
 
     if(position.x - radius < -screenWidth){
         position.x = -screenWidth + radius;
-        velocity.x *= -1;
+        velocity.x *= -0.20;
     }
 
     if(position.y + radius > screenHeight){
         position.y = screenHeight - radius;
-        velocity.y *= -1;
+        velocity.y *= -0.20;
     }
 
     if(position.y - radius < -screenHeight){
         position.y = -screenHeight + radius;
-        velocity.y *= -1;
+        velocity.y *= -0.20;
     }
 
     if (position.z + radius > screenDepth) {
       position.z = screenDepth - radius;
-      velocity.z *= -1;
+      velocity.z *= -0.20;
     }
     if(position.z - radius < -screenDepth) {
       position.z = -screenDepth + radius;
-      velocity.z *= -1;
+      velocity.z *= -0.20;
     }
   }
 
