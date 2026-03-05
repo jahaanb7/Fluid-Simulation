@@ -15,6 +15,8 @@ class Particle{
 
     // properties of particles
     float density;
+    float pressure;
+    float mass;
     int radius;
 
     Particle(glm::vec3 pos, glm::vec3 vel, int r){
@@ -22,6 +24,12 @@ class Particle{
       velocity = vel;
       radius = r;
 
+      // set values for fluid properties
+      mass = 5.0f;
+      density = 0.0f;
+      pressure = 0.0f;
+
+      // gravitational acceleration
       acceleration = glm::vec3(0.0f, -98.0f, 0.0f);
     }
 
