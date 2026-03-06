@@ -3,6 +3,8 @@
 #include <GLFW/glfw3.h>
 #include <vector>
 #include <cmath>
+#include <omp.h>
+
 
 #include "Particle.h"
 #include "SpatialGrid.h"
@@ -12,14 +14,22 @@ class Fluid{
   public:
 
     std::vector<Particle> particles;
+    std::vector<std::vector<int>> neighborCache;
 
-    // Properties of fluids (restDensity is the density of the fluid we want to eventually achieve)
-    const float viscosity = 0.1f;
-    const float restDensity = 60.0f;
-    const float stiffness = 1.70f;
+    const float h           = 1.0f;    // smoothing radius - world unit
+    const float restDensity = 1.0f;    // set from printed value at startup
+    const float stiffness   = 8.0f;    // pressure stiffness - higher = less compressible
+    const float viscosity   = 0.05f;   // fluid thickness - higher = more viscous
+    const float gravity     = 98.00f;    // gravitational acceleration
 
-    //smoothing radius for kernel
-    const float h = 14.0f;
+    // constants for smoothing kernel funcitions:
+    const float h2 = h*h;
+    const float h6 = h*h*h*h*h*h;
+    const float h9 = h*h*h*h*h*h*h*h*h;
+
+    const float poly6Const = 315.0f / (64.0f * M_PI * h9);
+    const float spikyConst = 45.0f  / (M_PI * h6);
+    const float lapConst = 45.0f  / (M_PI * h6);
 
     SpatialGrid spatialGrid{h};
 
@@ -39,24 +49,24 @@ class Fluid{
 
   */ 
 
+  void initParticles(){
+    neighborCache.resize(particles.size());
+
+    std::cout << "h2: "         << h2         << std::endl;
+    std::cout << "poly6Const: " << poly6Const << std::endl;
+    std::cout << "spikyConst: " << spikyConst << std::endl;
+  }
 
   // calculates for density force
-  float Poly6Kernel(Particle& i, Particle& j){
+  float Poly6Kernel(float r){
 
-    float r = getDistanceParticles(i.position, j.position);
-
-    if(r < h){
-      float h9 = h*h*h*h*h*h*h*h*h;
-
-      float hMinusr = ((h*h) - (r*r))*((h*h) - (r*r))*((h*h) - (r*r));
-
-      float kernel = (315.0f/ (64.0f * M_PI * h9)) * (hMinusr);
-      return kernel;
-    }
-
-    else{
+    if(r >= h){
       return 0.0f;
     }
+
+    float diff = h2 - r*r;
+
+    return poly6Const * (diff*diff*diff);
   }
 
   /* 
@@ -66,24 +76,14 @@ class Fluid{
   - non vanishing gradient near the center
   */
 
-  glm::vec3 SpikyKernel(Particle& i, Particle& j){
-
-    float r = getDistanceParticles(i.position, j.position);
-
+  glm::vec3 SpikyKernel(float r, glm::vec3 dir){
     if(r < 0.0001f || r >= h){
-      return glm::vec3(0.0f,0.0f,0.0f);
+      return glm::vec3(0.0f);
     }
 
-    glm::vec3 unitVector = (i.position - j.position) / r;
+    float hr = h - r;
 
-    float h6 = h*h*h*h*h*h;
-
-    float hMinusr = (h - r)*(h - r);
-
-    float scalar = -(45.0f / (M_PI * h6)) * (hMinusr);
-    glm::vec3 kernel = scalar * unitVector;
-
-    return kernel;
+    return (-spikyConst * hr * hr) * dir;
   }
 
   /*
@@ -95,79 +95,93 @@ class Fluid{
   - smoothing effect on the velocity field
   */
 
-  float LaplacianKernel(Particle& i, Particle& j){
+  float LaplacianKernel(float r){
 
-    float r = getDistanceParticles(i.position, j.position);
+    if(r >= h) return 0.0f;
 
-    if(r >= h){
-      return 0.0f;
-    }
-
-    float h6 = h*h*h*h*h*h;
-
-    float kernel = (45.0f / (M_PI * h6)) * (h - r);
-    
-    return kernel;
+    return lapConst * (h - r);
   }
 
+  void getDensity(){
+    #pragma omp parallel for schedule(dynamic)
 
-  void getDensity(std::vector<std::vector<int>>& neighborCache){
     for(int i = 0; i < particles.size(); i++){
-        particles[i].density = 0.0f;
-        particles[i].density += particles[i].mass * Poly6Kernel(particles[i], particles[i]);
+        particles[i].density = particles[i].mass * poly6Const * (h2*h2*h2);
 
         for(int j : neighborCache[i]){
-            particles[i].density += particles[j].mass * Poly6Kernel(particles[i], particles[j]);
+          glm::vec3 difference = particles[i].position - particles[j].position;
+
+          float r2 = glm::dot(difference, difference);
+
+          if(r2 >= h2) continue;
+
+          float r = std::sqrt(r2);
+
+          particles[i].density += particles[j].mass * Poly6Kernel(r);
         }
     }
   }
 
   void getPressure(){
+    #pragma omp parallel for
+
     for(int i = 0; i < particles.size(); i++){
-      particles[i].pressure = stiffness * (particles[i].density - restDensity);
+      float pressure = stiffness * (particles[i].density - restDensity);
+      particles[i].pressure = std::max(0.0f, pressure); // to ensure no negative pressure
     }
   }
 
-  void computeTotalForce(std::vector<std::vector<int>>& neighborCache){
+  void computeTotalForce(){
+    #pragma omp parallel for
 
     for(int i = 0; i < particles.size(); i++){
-      glm::vec3 totalForce = glm::vec3(0.0f);
+      glm::vec3 pressureForce  = glm::vec3(0.0f);
+      glm::vec3 viscosityForce = glm::vec3(0.0f);
+
       
       for(int j : neighborCache[i]){
         
         Particle& i1 = particles[i];
         Particle& j1 = particles[j];
 
-        glm::vec3 viscosityForce = (viscosity*(j1.mass)) * ((j1.velocity - i1.velocity)/j1.density) * LaplacianKernel(i1, j1);
-        glm::vec3 pressureForce = j1.mass * ((i1.pressure + j1.pressure)/(2*j1.density)) * SpikyKernel(i1, j1);
+        glm::vec3 difference = i1.position - j1.position;
+        float r2 = glm::dot(difference, difference);
 
-        totalForce += viscosityForce + pressureForce;
+        if(r2 >= h2) continue;
+
+        float r = std::sqrt(r2);
+        glm::vec3 dir = difference/r;
+
+        // pressure force - symmetric formulation
+        float avgPressure = (i1.pressure + j1.pressure) / (2.0f * j1.density);
+        pressureForce += j1.mass * avgPressure * SpikyKernel(r, dir);
+
+        // viscosity force - smooths velocity differences
+        float lap = LaplacianKernel(r);
+        viscosityForce += viscosity * j1.mass * ((j1.velocity - i1.velocity) / j1.density) * lap;
       }
 
-      glm::vec3 gravityForce = glm::vec3(0.0f, -0.98f, 0.0f) * particles[i].mass;
+      glm::vec3 gravityForce = glm::vec3(0.0f, -gravity, 0.0f) * particles[i].mass;
 
-      float safeDensity = std::max(particles[i].density, 0.0001f);
+      float safeDensity = std::max(particles[i].density, 1e-6f);
 
       // divided by density because its tiny volumes of fluid (not each particle) --> density is mass per volume
-      particles[i].acceleration = (totalForce + gravityForce) / safeDensity;
+      particles[i].acceleration = (pressureForce + viscosityForce + gravityForce) / safeDensity;
     }
   }
 
   void updateFluid(){
-
     spatialGrid.build(particles);
 
-    // build neighbor cache
-    std::vector<std::vector<int>> neighborCache(particles.size());
+    #pragma omp parallel for schedule(dynamic)
 
     for(int i = 0; i < particles.size(); i++){
-        neighborCache[i].reserve(64);
         neighborCache[i] = spatialGrid.checkForNeighbors(particles, i);
     }
 
-    getDensity(neighborCache);   
+    getDensity();   
     getPressure();   
-    computeTotalForce(neighborCache);
+    computeTotalForce();
   }
 
   float getDistanceParticles(glm::vec3 thisPosition, glm::vec3 otherPosition){
@@ -175,6 +189,26 @@ class Fluid{
     float distance = glm::length(distanceOfParticles);
 
     return distance;
+  }
+
+   void Statistics() {
+    float minD = 1e10f;
+    float maxD = 0.0f;
+    float avgD = 0.0f;
+
+    for (auto& p : particles) {
+      minD  = std::min(minD,  p.density);
+      maxD  = std::max(maxD,  p.density);
+
+      avgD += p.density;
+    }
+
+    avgD /= particles.size();
+
+    std::cout << "Density  min=" << minD
+              << "  max=" << maxD
+              << "  avg=" << avgD << std::endl;
+    std::cout << "→ Set restDensity = " << avgD << std::endl;
   }
 
 };

@@ -1,5 +1,6 @@
 #include <GLFW/glfw3.h>
 #include "Particle.h"
+#include <glm/glm.hpp>
 #include "Fluid.h"
 
 Fluid fluid;
@@ -9,6 +10,7 @@ void VerletIntegration(Particle& particle, float deltaTime){
     glm::vec3 oldAcceleration = particle.acceleration;
     particle.position += particle.velocity * deltaTime + 0.5f * oldAcceleration * deltaTime * deltaTime;
     particle.velocity += 0.5f * (oldAcceleration + particle.acceleration) * deltaTime;
+    particle.velocity *= 0.998f;
 }
 
 void drawParticleGrid3D(int rows, int columns, int zRange, float spacing, Particle& particle){
@@ -42,8 +44,34 @@ void update(float deltaTime, int WIDTH, int HEIGHT, int DEPTH){
   for(auto& particle : fluid.particles){
     VerletIntegration(particle, deltaTime);
     particle.boundaryCollision(WIDTH/2.0f, HEIGHT/2.0f, DEPTH/2.0f);
-    particle.drawParticle3D(5, 5);
   }
+
+    glDisable(GL_LIGHTING);
+    glPointSize(5.0f);
+
+    glBegin(GL_POINTS);
+    for(auto& particle : fluid.particles){
+
+        // get speed (magnitude of velocity)
+        float speed = glm::length(particle.velocity);
+
+        // clamp speed to a max value for color mapping
+        float maxSpeed = 8.0f;
+        float t = std::min(speed / maxSpeed, 1.0f);
+
+        // interpolate between two colors based on t
+        // slow = deep blue (0.0, 0.2, 0.8)
+        // fast = bright cyan/white (0.0, 1.0, 1.0)
+        glm::vec3 slowColor = glm::vec3(0.0f, 0.2f, 0.8f);
+        glm::vec3 fastColor = glm::vec3(1.0f, 0.8f, 0.2f);
+        glm::vec3 color = slowColor + t * (fastColor - slowColor);
+
+        glColor3f(color.r, color.g, color.b);
+        glVertex3f(particle.position.x, particle.position.y, particle.position.z);
+    }
+    glEnd();
+
+    glEnable(GL_LIGHTING);
 }
 
 void circleCollision(){

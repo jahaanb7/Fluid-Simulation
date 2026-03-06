@@ -18,7 +18,7 @@ class Camera{
     bool mousePressed = true;
     bool mouseLock;
 
-    float camSpeed = 10.0f;
+    float camSpeed;
     float sensitivity = 0.001f;
 
 
@@ -127,7 +127,7 @@ class Camera{
     
     if(!mouseLock){
 
-      float moveSpeed = 300.0f * deltaTime;
+      float moveSpeed = camSpeed * deltaTime * 10;
 
       if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){moveZ(moveSpeed);}
       if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){moveZ(-moveSpeed);}

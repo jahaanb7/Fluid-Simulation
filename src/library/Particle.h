@@ -35,7 +35,7 @@ class Particle{
     velocity += acceleration * deltaTime;
   }
 
-  void boundaryCollision(int screenWidth, int screenHeight, int screenDepth){
+  void boundaryCollision(float screenWidth, float screenHeight, float screenDepth){
     if(position.x + radius > screenWidth){
         position.x = screenWidth - radius;
         velocity.x *= -0.20;

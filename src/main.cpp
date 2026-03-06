@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <omp.h>
 
 #include "library/Physics.h"
 #include "library/Particle.h"
@@ -16,9 +17,9 @@
 int const SCREENWIDTH = 800;
 int const SCREENHEIGHT = 800;
 
-int const WIDTH = 500;
-int const HEIGHT = 500;
-int const DEPTH = 500;
+int const WIDTH = 60;
+int const HEIGHT = 60;
+int const DEPTH = 60;
 
 // Variables for projection matrix
 const float fov = glm::radians(60.0f);
@@ -30,15 +31,15 @@ const float farPlane = 5000.0f;
 bool mouseLock = false;
 
 // Variables for particle grid arrangement
-const int rows = 40;
-const int cols = 40;
-const int zRange = 3;
-const float spacing = 7.0f;
+const int rows = 30;
+const int cols = 30;
+const int zRange = 30;
+const float spacing = 0.5f;
 
 double lastFrame = 0.0f; 
 
 //Initialize camera
-Camera cam(0.0f, 0.0f, 1000.0f, 10.0f, mouseLock);
+Camera cam(0.0f, 0.0f, DEPTH*2, 1.0f, mouseLock);
 
 // resize the window
 void framebuffer_size_callback(GLFWwindow* window, int width, int height){
@@ -46,6 +47,8 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height){
 }
 
 int main(){
+
+  std::cout << "OpenMP threads available: " << omp_get_max_threads() << std::endl;
 
   //initialize GLFW for rendering window
   if(!glfwInit()){
@@ -83,9 +86,10 @@ int main(){
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
 
-  Particle particle = Particle(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), 3);
+  Particle particle = Particle(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), 1);
 
   drawParticleGrid3D(rows, cols, zRange, spacing, particle);
+  fluid.initParticles(); 
 
   // Render loop: handles user events and inputs
   while(!glfwWindowShouldClose(window)){
