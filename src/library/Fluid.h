@@ -15,11 +15,11 @@ class Fluid{
 
     // Properties of fluids (restDensity is the density of the fluid we want to eventually achieve)
     const float viscosity = 0.1f;
-    const float restDensity = 4.5f;
+    const float restDensity = 60.0f;
     const float stiffness = 1.70f;
 
     //smoothing radius for kernel
-    const float h = 12.0f;
+    const float h = 14.0f;
 
     SpatialGrid spatialGrid{h};
 

@@ -16,9 +16,9 @@
 int const SCREENWIDTH = 800;
 int const SCREENHEIGHT = 800;
 
-int const WIDTH = 200;
-int const HEIGHT = 200;
-int const DEPTH = 10;
+int const WIDTH = 500;
+int const HEIGHT = 500;
+int const DEPTH = 500;
 
 // Variables for projection matrix
 const float fov = glm::radians(60.0f);
@@ -32,8 +32,8 @@ bool mouseLock = false;
 // Variables for particle grid arrangement
 const int rows = 40;
 const int cols = 40;
-const int zRange = 1;
-const float spacing = 5.0f;
+const int zRange = 3;
+const float spacing = 7.0f;
 
 double lastFrame = 0.0f; 
 
