@@ -12,17 +12,13 @@ class Fluid{
 
     std::vector<Particle> particles;
 
-    // Properties of fluids
+    // Properties of fluids (restDensity is the density of the fluid we want to eventually achieve)
     const float viscosity = 0.1f;
-    const float restDensity = 0.00345233;
+    const float restDensity = 0.0245233f;
     const float stiffness = 90.0f;
 
     //smoothing radius for kernel
-    const float h = 80.0f;
-
-    glm::vec3 Force;
-    glm::vec3 Color;
-
+    const float smoothingRadius = 80.0f;
 
   /*
 
@@ -44,10 +40,10 @@ class Fluid{
   // calculates for density force
   float Poly6Kernel(Particle& i, Particle& j){
 
-    float r = getDistanceParticles(i.position, j.position);
+    float distanceParticles = getDistanceParticles(i.position, j.position);
 
-    if(r < h){
-      float kernel = (315.0f / (64.0f * M_PI * (pow(h, 9)))) * (pow(((h*h) - (r*r)), 3));
+    if(distanceParticles < smoothingRadius){
+      float kernel = (315.0f / (64.0f * M_PI * (pow(smoothingRadius, 9)))) * (pow(((smoothingRadius*smoothingRadius) - (distanceParticles*distanceParticles)), 3));
       return kernel;
     }
 
@@ -65,15 +61,15 @@ class Fluid{
 
   glm::vec3 SpikyKernel(Particle& i, Particle& j){
 
-    float r = getDistanceParticles(i.position, j.position);
+    float distanceParticles = getDistanceParticles(i.position, j.position);
 
-    if(r < 0.0001f || r >= h){
+    if(distanceParticles < 0.0001f || distanceParticles >= smoothingRadius){
       return glm::vec3(0.0f,0.0f,0.0f);
     }
 
-    glm::vec3 unitVector = (i.position - j.position) / r;
+    glm::vec3 unitVector = (i.position - j.position) / distanceParticles;
 
-    float scalar = -(45.0f / (M_PI * pow(h, 6.0f))) * (pow((h - r), 2.0f));
+    float scalar = -(45.0f / (M_PI * pow(smoothingRadius, 6.0f))) * (pow((smoothingRadius - distanceParticles), 2.0f));
     glm::vec3 kernel = scalar * unitVector;
 
     return kernel;
@@ -90,13 +86,13 @@ class Fluid{
 
   float LaplacianKernel(Particle& i, Particle& j){
 
-    float r = getDistanceParticles(i.position, j.position);
+    float distanceParticles = getDistanceParticles(i.position, j.position);
 
-    if(r >= h){
+    if(distanceParticles >= smoothingRadius){
       return 0.0f;
     }
 
-    float kernel = (45.0f / (M_PI * pow(h, 6))) * (h - r);
+    float kernel = (45.0f / (M_PI * pow(smoothingRadius, 6))) * (smoothingRadius - distanceParticles);
     
     return kernel;
   }
@@ -137,6 +133,7 @@ class Fluid{
 
       glm::vec3 gravityForce = glm::vec3(0.0f, -0.98f, 0.0f) * particles[i].mass;
 
+      // divided by density because its tiny volumes of fluid (not each particle) --> density is mass per volume
       particles[i].acceleration = (totalForce + gravityForce) / particles[i].density;
     }
   }
@@ -155,9 +152,9 @@ class Fluid{
 
   float getDistanceParticles(glm::vec3 thisPosition, glm::vec3 otherPosition){
     glm::vec3 distanceOfParticles = thisPosition - otherPosition;
-    float r = glm::length(distanceOfParticles);
+    float distance = glm::length(distanceOfParticles);
 
-    return r;
+    return distance;
   }
 
 };

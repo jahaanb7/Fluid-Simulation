@@ -27,9 +27,9 @@ const float farPlane = 5000.0f;
 bool mouseLock = false;
 
 // Variables for particle grid arrangement
-const int rows = 7;
-const int cols = 7;
-const int zRange = 7;
+const int rows = 6;
+const int cols = 6;
+const int zRange = 6;
 const float spacing = 30.0f;
 
 double lastFrame = 0.0f; 
