@@ -25,9 +25,10 @@ class Particle{
       radius = r;
 
       // set values for fluid properties
-      mass = 0.020f;
+      mass = 0.76f;
       density = 0.0f;
       pressure = 0.0f;
+      acceleration = glm::vec3(0.0f);
     }
 
   void updatePosition(float deltaTime){
@@ -36,33 +37,35 @@ class Particle{
   }
 
   void boundaryCollision(float WIDTH, float HEIGHT, float DEPTH){
+    const float damping  = -0.3f;
+
     if(position.x + radius > WIDTH){
         position.x = WIDTH - radius;
-        velocity.x *= -1.00;
+        velocity.x *= damping;
     }
 
     if(position.x - radius < -WIDTH){
         position.x = -WIDTH + radius;
-        velocity.x *= -1.00;
+        velocity.x *= damping;
     }
 
     if(position.y + radius > HEIGHT){
         position.y = HEIGHT - radius;
-        velocity.y *= -1.00;
+        velocity.y *= damping;
     }
 
     if(position.y - radius < -HEIGHT){
         position.y = -HEIGHT + radius;
-        velocity.y *= -1.00;
+        velocity.y *= damping;
     }
 
     if (position.z + radius > DEPTH) {
       position.z = DEPTH - radius;
-      velocity.z *= -1.00;
+      velocity.z *= damping;
     }
     if(position.z - radius < -DEPTH) {
       position.z = -DEPTH + radius;
-      velocity.z *= -1.00;
+      velocity.z *= damping;
     }
   }
 

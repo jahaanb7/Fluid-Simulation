@@ -16,11 +16,12 @@ class Fluid{
     std::vector<Particle> particles;
     std::vector<std::vector<int>> neighborCache;
 
-    const float h           = 0.15f;    // smoothing radius - world unit
-    const float restDensity = 1000.0f;    // set from printed value at startup
-    const float stiffness   = 2.0f;    // pressure stiffness - higher = less compressible
-    const float viscosity   = 0.05f;   // fluid thickness - higher = more viscous
-    const float gravity     = 98.00f;    // gravitational acceleration
+    const float h = 0.2f;   
+    const float targetDensity = 15000.0f; 
+    const float stiffness = 2.0f;    
+    const float viscosity = 0.05f;   
+    const float gravity = 200.00f;  
+    const float pressureForce = 1.0f;
 
     // constants for smoothing kernel funcitions:
     const float h2 = h*h;
@@ -53,8 +54,6 @@ class Fluid{
     neighborCache.resize(particles.size());
 
     std::cout << "Particles:    " << particles.size() << std::endl;
-    std::cout << "poly6Const:   " << poly6Const       << std::endl;
-    std::cout << "spikyConst:   " << spikyConst       << std::endl;
   }
 
   // calculates for density force
@@ -126,8 +125,9 @@ class Fluid{
     #pragma omp parallel for
 
     for(int i = 0; i < particles.size(); i++){
-      float pressure = stiffness * (particles[i].density - restDensity);
-      particles[i].pressure = std::max(0.0f, pressure); // to ensure no negative pressure
+      float pressure = stiffness * (particles[i].density - targetDensity);
+      
+      particles[i].pressure = std::max(-25.0f, pressure) * pressureForce;
     }
   }
 
@@ -180,6 +180,10 @@ class Fluid{
     }
 
     getDensity();   
+    
+    // information for tuning values of density, viscosity, stiffness, etc
+    Statistics();
+
     getPressure();   
     computeTotalForce();
   }
@@ -209,7 +213,7 @@ class Fluid{
 
     std::cout << "Density  min=" << minD << "  max=" << maxD
               << "  avg=" << avgD << std::endl;
-    std::cout << "→ ideal restDensity ≈ " << avgD << std::endl;
+    std::cout << "→ ideal targetDensity ≈ " << avgD << std::endl;
   }
 
 };

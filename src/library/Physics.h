@@ -10,8 +10,8 @@ void VerletIntegration(Particle& particle, float deltaTime){
     glm::vec3 oldAcceleration = particle.acceleration;
     particle.position += particle.velocity * deltaTime + 0.5f * oldAcceleration * deltaTime * deltaTime;
     particle.velocity += 0.5f * (oldAcceleration + particle.acceleration) * deltaTime;
-    particle.velocity *= 0.998f;
 }
+
 
 void drawParticleGrid3D(int rows, int columns, int zRange, float spacing, Particle& particle){
   fluid.particles.clear();
@@ -47,25 +47,10 @@ glm::vec3 velocityColor(float speed, float maxSpeed = 3.0f){
   return glm::mix(low, high, s);
 }
 
-void update(float deltaTime, float WIDTH, float HEIGHT, float DEPTH){
-
-  fluid.updateFluid();
-
-  for(auto& particle : fluid.particles){
-    VerletIntegration(particle, deltaTime);
-    particle.boundaryCollision(WIDTH, HEIGHT, DEPTH);
-  }
-
-  glEnable(GL_LIGHTING);
-
-  for (auto& particle : fluid.particles) {
-    glm::vec3 col = velocityColor(glm::length(particle.velocity));
-    particle.drawParticle3D(3, 3, col);
-  }
-}
-
 void circleCollision(){
   float damping = 0.95f;
+
+  #pragma omp parallel for schedule(dynamic)
 
   for(int i = 0; i < fluid.particles.size(); i++){
     for(int j = i + 1; j < fluid.particles.size(); j++){
@@ -86,6 +71,23 @@ void circleCollision(){
         fluid.particles[j].position += normal * (overlap * 0.5f);
       }
     }
+  }
+}
+
+void update(float deltaTime, float WIDTH, float HEIGHT, float DEPTH){
+
+  fluid.updateFluid();
+
+  for(auto& particle : fluid.particles){
+    VerletIntegration(particle, deltaTime);
+    particle.boundaryCollision(WIDTH, HEIGHT, DEPTH);
+  }
+
+  glEnable(GL_LIGHTING);
+
+  for (auto& particle : fluid.particles) {
+    glm::vec3 col = velocityColor(glm::length(particle.velocity));
+    particle.drawParticle3D(5, 5, col);
   }
 }
 

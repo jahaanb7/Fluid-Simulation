@@ -127,7 +127,7 @@ class Camera{
     
     if(!mouseLock){
 
-      float moveSpeed = camSpeed * deltaTime * 10;
+      float moveSpeed = camSpeed * deltaTime;
 
       if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){moveZ(moveSpeed);}
       if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){moveZ(-moveSpeed);}
