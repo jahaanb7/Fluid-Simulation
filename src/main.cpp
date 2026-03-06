@@ -17,9 +17,9 @@
 int const SCREENWIDTH = 800;
 int const SCREENHEIGHT = 800;
 
-int const WIDTH = 60;
-int const HEIGHT = 60;
-int const DEPTH = 60;
+float const WIDTH =  1.5f;
+float const HEIGHT = 1.5f;
+float const DEPTH =  1.5f;
 
 // Variables for projection matrix
 const float fov = glm::radians(60.0f);
@@ -31,15 +31,17 @@ const float farPlane = 5000.0f;
 bool mouseLock = false;
 
 // Variables for particle grid arrangement
-const int rows = 30;
-const int cols = 30;
-const int zRange = 30;
-const float spacing = 0.5f;
+const int rows = 20;
+const int cols = 20;
+const int zRange = 20;
+const float spacing = 0.09f;
+
+const float radius = spacing * 0.5f;
 
 double lastFrame = 0.0f; 
 
 //Initialize camera
-Camera cam(0.0f, 0.0f, DEPTH*2, 1.0f, mouseLock);
+Camera cam(0.5f, 1.0f, 6.0f, 1.0f, mouseLock);
 
 // resize the window
 void framebuffer_size_callback(GLFWwindow* window, int width, int height){
@@ -85,8 +87,12 @@ int main(){
   // Enable positional lighting that
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
+  glEnable(GL_NORMALIZE); 
 
-  Particle particle = Particle(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), 1);
+  GLfloat ambient[] = { 0.20f, 0.22f, 0.28f, 1.0f };
+  glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambient);
+
+  Particle particle = Particle(glm::vec3(0.0f, 0.3f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), radius);
 
   drawParticleGrid3D(rows, cols, zRange, spacing, particle);
   fluid.initParticles(); 
@@ -130,7 +136,7 @@ int main(){
     glLightfv(GL_LIGHT0, GL_POSITION, light);
 
     update(deltaTime, WIDTH, HEIGHT, DEPTH);
-    drawBoundaryBox(WIDTH, HEIGHT, DEPTH/2.0f);
+    drawBoundaryBox(WIDTH, HEIGHT, DEPTH);
 
     glfwSwapBuffers(window);
     glfwPollEvents();    

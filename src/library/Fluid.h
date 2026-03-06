@@ -16,9 +16,9 @@ class Fluid{
     std::vector<Particle> particles;
     std::vector<std::vector<int>> neighborCache;
 
-    const float h           = 1.0f;    // smoothing radius - world unit
-    const float restDensity = 1.0f;    // set from printed value at startup
-    const float stiffness   = 8.0f;    // pressure stiffness - higher = less compressible
+    const float h           = 0.15f;    // smoothing radius - world unit
+    const float restDensity = 1000.0f;    // set from printed value at startup
+    const float stiffness   = 2.0f;    // pressure stiffness - higher = less compressible
     const float viscosity   = 0.05f;   // fluid thickness - higher = more viscous
     const float gravity     = 98.00f;    // gravitational acceleration
 
@@ -52,9 +52,9 @@ class Fluid{
   void initParticles(){
     neighborCache.resize(particles.size());
 
-    std::cout << "h2: "         << h2         << std::endl;
-    std::cout << "poly6Const: " << poly6Const << std::endl;
-    std::cout << "spikyConst: " << spikyConst << std::endl;
+    std::cout << "Particles:    " << particles.size() << std::endl;
+    std::cout << "poly6Const:   " << poly6Const       << std::endl;
+    std::cout << "spikyConst:   " << spikyConst       << std::endl;
   }
 
   // calculates for density force
@@ -156,7 +156,7 @@ class Fluid{
         float avgPressure = (i1.pressure + j1.pressure) / (2.0f * j1.density);
         pressureForce += j1.mass * avgPressure * SpikyKernel(r, dir);
 
-        // viscosity force - smooths velocity differences
+        // viscosity force
         float lap = LaplacianKernel(r);
         viscosityForce += viscosity * j1.mass * ((j1.velocity - i1.velocity) / j1.density) * lap;
       }
@@ -191,7 +191,9 @@ class Fluid{
     return distance;
   }
 
-   void Statistics() {
+
+  // To fine tune the property values of the fluid --> this was created by Claude
+  void Statistics() {
     float minD = 1e10f;
     float maxD = 0.0f;
     float avgD = 0.0f;
@@ -205,10 +207,9 @@ class Fluid{
 
     avgD /= particles.size();
 
-    std::cout << "Density  min=" << minD
-              << "  max=" << maxD
+    std::cout << "Density  min=" << minD << "  max=" << maxD
               << "  avg=" << avgD << std::endl;
-    std::cout << "→ Set restDensity = " << avgD << std::endl;
+    std::cout << "→ ideal restDensity ≈ " << avgD << std::endl;
   }
 
 };

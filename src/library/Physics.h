@@ -37,41 +37,31 @@ void drawParticleGrid3D(int rows, int columns, int zRange, float spacing, Partic
   }
 }
 
-void update(float deltaTime, int WIDTH, int HEIGHT, int DEPTH){
+glm::vec3 velocityColor(float speed, float maxSpeed = 3.0f){
+
+  float s = std::min(speed / maxSpeed, 1.0f);
+
+  glm::vec3 low(0.08f, 0.35f, 0.95f);   
+  glm::vec3 high(1.00f, 0.55f, 0.05f);
+
+  return glm::mix(low, high, s);
+}
+
+void update(float deltaTime, float WIDTH, float HEIGHT, float DEPTH){
 
   fluid.updateFluid();
 
   for(auto& particle : fluid.particles){
     VerletIntegration(particle, deltaTime);
-    particle.boundaryCollision(WIDTH/2.0f, HEIGHT/2.0f, DEPTH/2.0f);
+    particle.boundaryCollision(WIDTH, HEIGHT, DEPTH);
   }
 
-    glDisable(GL_LIGHTING);
-    glPointSize(5.0f);
+  glEnable(GL_LIGHTING);
 
-    glBegin(GL_POINTS);
-    for(auto& particle : fluid.particles){
-
-        // get speed (magnitude of velocity)
-        float speed = glm::length(particle.velocity);
-
-        // clamp speed to a max value for color mapping
-        float maxSpeed = 8.0f;
-        float t = std::min(speed / maxSpeed, 1.0f);
-
-        // interpolate between two colors based on t
-        // slow = deep blue (0.0, 0.2, 0.8)
-        // fast = bright cyan/white (0.0, 1.0, 1.0)
-        glm::vec3 slowColor = glm::vec3(0.0f, 0.2f, 0.8f);
-        glm::vec3 fastColor = glm::vec3(1.0f, 0.8f, 0.2f);
-        glm::vec3 color = slowColor + t * (fastColor - slowColor);
-
-        glColor3f(color.r, color.g, color.b);
-        glVertex3f(particle.position.x, particle.position.y, particle.position.z);
-    }
-    glEnd();
-
-    glEnable(GL_LIGHTING);
+  for (auto& particle : fluid.particles) {
+    glm::vec3 col = velocityColor(glm::length(particle.velocity));
+    particle.drawParticle3D(3, 3, col);
+  }
 }
 
 void circleCollision(){
@@ -99,11 +89,11 @@ void circleCollision(){
   }
 }
 
-// 2D Boundary Box - collision and containment
+// 3D Boundary Box - collision and containment
 void drawBoundaryBox(float width, float height, float depth) {
-    float x = width / 2.0f;
-    float y = height / 2.0f;
-    float z = depth; 
+    float x = width;
+    float y = height;
+    float z = depth;
 
     glDisable(GL_LIGHTING);
     glColor3f(1.0f,1.0f,1.0f); 

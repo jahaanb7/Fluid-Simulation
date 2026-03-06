@@ -17,15 +17,15 @@ class Particle{
     float density;
     float pressure;
     float mass;
-    int radius;
+    float radius;
 
-    Particle(glm::vec3 pos, glm::vec3 vel, int r){
+    Particle(glm::vec3 pos, glm::vec3 vel, float r){
       position = pos;
       velocity = vel;
       radius = r;
 
       // set values for fluid properties
-      mass = 1.0f;
+      mass = 0.020f;
       density = 0.0f;
       pressure = 0.0f;
     }
@@ -35,34 +35,34 @@ class Particle{
     velocity += acceleration * deltaTime;
   }
 
-  void boundaryCollision(float screenWidth, float screenHeight, float screenDepth){
-    if(position.x + radius > screenWidth){
-        position.x = screenWidth - radius;
-        velocity.x *= -0.20;
+  void boundaryCollision(float WIDTH, float HEIGHT, float DEPTH){
+    if(position.x + radius > WIDTH){
+        position.x = WIDTH - radius;
+        velocity.x *= -1.00;
     }
 
-    if(position.x - radius < -screenWidth){
-        position.x = -screenWidth + radius;
-        velocity.x *= -0.20;
+    if(position.x - radius < -WIDTH){
+        position.x = -WIDTH + radius;
+        velocity.x *= -1.00;
     }
 
-    if(position.y + radius > screenHeight){
-        position.y = screenHeight - radius;
-        velocity.y *= -0.20;
+    if(position.y + radius > HEIGHT){
+        position.y = HEIGHT - radius;
+        velocity.y *= -1.00;
     }
 
-    if(position.y - radius < -screenHeight){
-        position.y = -screenHeight + radius;
-        velocity.y *= -0.20;
+    if(position.y - radius < -HEIGHT){
+        position.y = -HEIGHT + radius;
+        velocity.y *= -1.00;
     }
 
-    if (position.z + radius > screenDepth) {
-      position.z = screenDepth - radius;
-      velocity.z *= -0.20;
+    if (position.z + radius > DEPTH) {
+      position.z = DEPTH - radius;
+      velocity.z *= -1.00;
     }
-    if(position.z - radius < -screenDepth) {
-      position.z = -screenDepth + radius;
-      velocity.z *= -0.20;
+    if(position.z - radius < -DEPTH) {
+      position.z = -DEPTH + radius;
+      velocity.z *= -1.00;
     }
   }
 
@@ -87,7 +87,15 @@ class Particle{
     glEnd();
   }
 
-  void drawParticle3D(int lats, int longs){
+  void drawParticle3D(int lats, int longs, glm::vec3 color){
+
+    GLfloat diff[] = {color.r, color.g, color.b, 1.0f};
+    GLfloat spec[] = {0.4f, 0.4f, 0.4f, 1.0f};
+
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, diff);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, spec);
+    glMaterialf(GL_FRONT, GL_SHININESS, 32.0f);
+
     for(int i = 0; i < lats; i++){
       float lat0 = M_PI * (-0.5f + (float)i / lats);
       float z0  = sin(lat0) * radius;
@@ -98,6 +106,7 @@ class Particle{
       float zr1 = cos(lat1) * radius;
 
       glBegin(GL_TRIANGLE_STRIP);
+
       for(int j = 0; j <= longs; j++){
 
         float lng = 2 * M_PI * (float)(j) / longs;
