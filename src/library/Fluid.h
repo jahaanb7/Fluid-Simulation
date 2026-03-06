@@ -5,6 +5,7 @@
 #include <cmath>
 
 #include "Particle.h"
+#include "SpatialGrid.h"
 
 class Fluid{
   
@@ -14,11 +15,13 @@ class Fluid{
 
     // Properties of fluids (restDensity is the density of the fluid we want to eventually achieve)
     const float viscosity = 0.1f;
-    const float restDensity = 0.0245233f;
-    const float stiffness = 90.0f;
+    const float restDensity = 4.5f;
+    const float stiffness = 1.70f;
 
     //smoothing radius for kernel
-    const float smoothingRadius = 80.0f;
+    const float h = 12.0f;
+
+    SpatialGrid spatialGrid{h};
 
   /*
 
@@ -40,10 +43,14 @@ class Fluid{
   // calculates for density force
   float Poly6Kernel(Particle& i, Particle& j){
 
-    float distanceParticles = getDistanceParticles(i.position, j.position);
+    float r = getDistanceParticles(i.position, j.position);
 
-    if(distanceParticles < smoothingRadius){
-      float kernel = (315.0f / (64.0f * M_PI * (pow(smoothingRadius, 9)))) * (pow(((smoothingRadius*smoothingRadius) - (distanceParticles*distanceParticles)), 3));
+    if(r < h){
+      float h9 = h*h*h*h*h*h*h*h*h;
+
+      float hMinusr = ((h*h) - (r*r))*((h*h) - (r*r))*((h*h) - (r*r));
+
+      float kernel = (315.0f/ (64.0f * M_PI * h9)) * (hMinusr);
       return kernel;
     }
 
@@ -61,15 +68,19 @@ class Fluid{
 
   glm::vec3 SpikyKernel(Particle& i, Particle& j){
 
-    float distanceParticles = getDistanceParticles(i.position, j.position);
+    float r = getDistanceParticles(i.position, j.position);
 
-    if(distanceParticles < 0.0001f || distanceParticles >= smoothingRadius){
+    if(r < 0.0001f || r >= h){
       return glm::vec3(0.0f,0.0f,0.0f);
     }
 
-    glm::vec3 unitVector = (i.position - j.position) / distanceParticles;
+    glm::vec3 unitVector = (i.position - j.position) / r;
 
-    float scalar = -(45.0f / (M_PI * pow(smoothingRadius, 6.0f))) * (pow((smoothingRadius - distanceParticles), 2.0f));
+    float h6 = h*h*h*h*h*h;
+
+    float hMinusr = (h - r)*(h - r);
+
+    float scalar = -(45.0f / (M_PI * h6)) * (hMinusr);
     glm::vec3 kernel = scalar * unitVector;
 
     return kernel;
@@ -86,22 +97,26 @@ class Fluid{
 
   float LaplacianKernel(Particle& i, Particle& j){
 
-    float distanceParticles = getDistanceParticles(i.position, j.position);
+    float r = getDistanceParticles(i.position, j.position);
 
-    if(distanceParticles >= smoothingRadius){
+    if(r >= h){
       return 0.0f;
     }
 
-    float kernel = (45.0f / (M_PI * pow(smoothingRadius, 6))) * (smoothingRadius - distanceParticles);
+    float h6 = h*h*h*h*h*h;
+
+    float kernel = (45.0f / (M_PI * h6)) * (h - r);
     
     return kernel;
   }
 
 
-  void getDensity(){
+  void getDensity(std::vector<std::vector<int>>& neighborCache){
     for(int i = 0; i < particles.size(); i++){
         particles[i].density = 0.0f;
-        for(int j = 0; j < particles.size(); j++){
+        particles[i].density += particles[i].mass * Poly6Kernel(particles[i], particles[i]);
+
+        for(int j : neighborCache[i]){
             particles[i].density += particles[j].mass * Poly6Kernel(particles[i], particles[j]);
         }
     }
@@ -113,14 +128,12 @@ class Fluid{
     }
   }
 
-  void computeTotalForce(){
+  void computeTotalForce(std::vector<std::vector<int>>& neighborCache){
 
     for(int i = 0; i < particles.size(); i++){
       glm::vec3 totalForce = glm::vec3(0.0f);
-
-      for(int j = 0; j < particles.size(); j++){
-
-        if(i == j) continue;
+      
+      for(int j : neighborCache[i]){
         
         Particle& i1 = particles[i];
         Particle& j1 = particles[j];
@@ -133,21 +146,28 @@ class Fluid{
 
       glm::vec3 gravityForce = glm::vec3(0.0f, -0.98f, 0.0f) * particles[i].mass;
 
+      float safeDensity = std::max(particles[i].density, 0.0001f);
+
       // divided by density because its tiny volumes of fluid (not each particle) --> density is mass per volume
-      particles[i].acceleration = (totalForce + gravityForce) / particles[i].density;
+      particles[i].acceleration = (totalForce + gravityForce) / safeDensity;
     }
   }
 
   void updateFluid(){
-    getDensity();   
-    
-    std::cout << "density[0]: " << particles[0].density << std::endl;     
 
+    spatialGrid.build(particles);
+
+    // build neighbor cache
+    std::vector<std::vector<int>> neighborCache(particles.size());
+
+    for(int i = 0; i < particles.size(); i++){
+        neighborCache[i].reserve(64);
+        neighborCache[i] = spatialGrid.checkForNeighbors(particles, i);
+    }
+
+    getDensity(neighborCache);   
     getPressure();   
-    
-    std::cout << "pressure[0]: " << particles[0].pressure << std::endl;
-
-    computeTotalForce();
+    computeTotalForce(neighborCache);
   }
 
   float getDistanceParticles(glm::vec3 thisPosition, glm::vec3 otherPosition){

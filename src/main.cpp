@@ -13,13 +13,16 @@
 // Global Variables:
 
 //screen dimensions
-int const WIDTH = 800;
-int const HEIGHT = 800;
-int const DEPTH = 800;
+int const SCREENWIDTH = 800;
+int const SCREENHEIGHT = 800;
+
+int const WIDTH = 200;
+int const HEIGHT = 200;
+int const DEPTH = 10;
 
 // Variables for projection matrix
 const float fov = glm::radians(60.0f);
-const float aspectRatio = WIDTH / HEIGHT;
+const float aspectRatio = (float)SCREENWIDTH / (float)SCREENHEIGHT;
 const float nearPlane =  0.1f;
 const float farPlane = 5000.0f;
 
@@ -27,10 +30,10 @@ const float farPlane = 5000.0f;
 bool mouseLock = false;
 
 // Variables for particle grid arrangement
-const int rows = 6;
-const int cols = 6;
-const int zRange = 6;
-const float spacing = 30.0f;
+const int rows = 40;
+const int cols = 40;
+const int zRange = 1;
+const float spacing = 5.0f;
 
 double lastFrame = 0.0f; 
 
@@ -51,7 +54,7 @@ int main(){
   }
 
   // create GLFWwindow
-  GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Fluid Simulation", NULL, NULL);
+  GLFWwindow* window = glfwCreateWindow(SCREENWIDTH, SCREENHEIGHT, "Fluid Simulation", NULL, NULL);
   if (window == NULL){
     std::cout<<"Failed to create GLFW window"<<std::endl;
     glfwTerminate();
@@ -80,7 +83,7 @@ int main(){
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
 
-  Particle particle = Particle(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), 5);
+  Particle particle = Particle(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), 3);
 
   drawParticleGrid3D(rows, cols, zRange, spacing, particle);
 
