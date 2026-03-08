@@ -58,11 +58,16 @@ class SpatialGrid {
 
             // check if any particles live in this cell
             auto it = grid.find(key);
-            if (it == grid.end()) continue;
+            if (it == grid.end()){
+              continue;
+            }
 
             // add each particle in that cell to neighbors
             for (int j : it->second) {
-              if (j == index) continue;  // skip self
+              if (j == index){
+                continue;
+              }
+              
               neighbors.push_back(j);
             }
           }

@@ -17,10 +17,10 @@ class Fluid{
     std::vector<std::vector<int>> neighborCache;
 
     const float h = 0.2f;   
-    const float targetDensity = 15000.0f; 
+    const float targetDensity = 20000.0f; 
     const float stiffness = 2.0f;    
     const float viscosity = 0.05f;   
-    const float gravity = 200.00f;  
+    const float gravity = 200.0f;  
     const float pressureForce = 1.0f;
 
     // constants for smoothing kernel funcitions:
@@ -180,10 +180,6 @@ class Fluid{
     }
 
     getDensity();   
-    
-    // information for tuning values of density, viscosity, stiffness, etc
-    Statistics();
-
     getPressure();   
     computeTotalForce();
   }
@@ -194,26 +190,4 @@ class Fluid{
 
     return distance;
   }
-
-
-  // To fine tune the property values of the fluid --> this was created by Claude
-  void Statistics() {
-    float minD = 1e10f;
-    float maxD = 0.0f;
-    float avgD = 0.0f;
-
-    for (auto& p : particles) {
-      minD  = std::min(minD,  p.density);
-      maxD  = std::max(maxD,  p.density);
-
-      avgD += p.density;
-    }
-
-    avgD /= particles.size();
-
-    std::cout << "Density  min=" << minD << "  max=" << maxD
-              << "  avg=" << avgD << std::endl;
-    std::cout << "→ ideal targetDensity ≈ " << avgD << std::endl;
-  }
-
 };

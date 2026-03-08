@@ -31,9 +31,9 @@ const float farPlane = 5000.0f;
 bool mouseLock = false;
 
 // Variables for particle grid arrangement
-const int rows = 20;
-const int cols = 20;
-const int zRange = 20;
+const int rows = 18;
+const int cols = 18;
+const int zRange = 18;
 const float spacing = 0.09f;
 
 const float radius = spacing * 0.5f;
@@ -41,7 +41,7 @@ const float radius = spacing * 0.5f;
 double lastFrame = 0.0f; 
 
 //Initialize camera
-Camera cam(0.5f, 1.0f, 6.0f, 1.0f, mouseLock);
+Camera cam(0.5f, 1.0f, DEPTH * 2, 1.0f, mouseLock);
 
 // resize the window
 void framebuffer_size_callback(GLFWwindow* window, int width, int height){
@@ -49,8 +49,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height){
 }
 
 int main(){
-
-  std::cout << "OpenMP threads available: " << omp_get_max_threads() << std::endl;
 
   //initialize GLFW for rendering window
   if(!glfwInit()){

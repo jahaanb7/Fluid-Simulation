@@ -87,7 +87,7 @@ void update(float deltaTime, float WIDTH, float HEIGHT, float DEPTH){
 
   for (auto& particle : fluid.particles) {
     glm::vec3 col = velocityColor(glm::length(particle.velocity));
-    particle.drawParticle3D(5, 5, col);
+    particle.drawParticle3D(7, 7, col);
   }
 }
 
