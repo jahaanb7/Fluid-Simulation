@@ -16,12 +16,11 @@ class Fluid{
     std::vector<Particle> particles;
     std::vector<std::vector<int>> neighborCache;
 
-    const float h = 0.2f;   
-    const float targetDensity = 20000.0f; 
-    const float stiffness = 2.0f;    
-    const float viscosity = 0.05f;   
-    const float gravity = 200.0f;  
-    const float pressureForce = 1.0f;
+    const float h = 0.2f;
+    const float targetDensity = 50.0f;
+    const float stiffness = 0.7f;
+    const float viscosity = 0.08f;
+    const float gravity = 2.0f;
 
     // constants for smoothing kernel funcitions:
     const float h2 = h*h;
@@ -75,7 +74,7 @@ class Fluid{
   - non vanishing gradient near the center
   */
 
-  glm::vec3 SpikyKernel(float r, glm::vec3 dir){
+  glm::vec3 SpikyKernelGradient(float r, glm::vec3 dir){
     if(r < 0.0001f || r >= h){
       return glm::vec3(0.0f);
     }
@@ -126,8 +125,8 @@ class Fluid{
 
     for(int i = 0; i < particles.size(); i++){
       float pressure = stiffness * (particles[i].density - targetDensity);
-      
-      particles[i].pressure = std::max(-25.0f, pressure) * pressureForce;
+
+      particles[i].pressure = std::max(0.0f, pressure);
     }
   }
 
@@ -138,35 +137,36 @@ class Fluid{
       glm::vec3 pressureForce  = glm::vec3(0.0f);
       glm::vec3 viscosityForce = glm::vec3(0.0f);
 
-      
+      Particle& i1 = particles[i];
+      float safeDensity_i = std::max(i1.density, 1e-6f);
+
       for(int j : neighborCache[i]){
         
-        Particle& i1 = particles[i];
-        Particle& j1 = particles[j];
+        const Particle j1 = particles[j]; 
 
         glm::vec3 difference = i1.position - j1.position;
         float r2 = glm::dot(difference, difference);
 
-        if(r2 >= h2) continue;
+        if(r2 >= h2 || r2 < 0.0001f * 0.0001f){
+          continue;
+        }
 
         float r = std::sqrt(r2);
         glm::vec3 dir = difference/r;
 
+        float safeDensity_j = std::max(j1.density, 1e-6f);
+
         // pressure force - symmetric formulation
-        float avgPressure = (i1.pressure + j1.pressure) / (2.0f * j1.density);
-        pressureForce += j1.mass * avgPressure * SpikyKernel(r, dir);
+        float pressure = (i1.pressure / (safeDensity_i * safeDensity_i)) + (j1.pressure / (safeDensity_j * safeDensity_j));
+        pressureForce -= j1.mass * pressure * SpikyKernelGradient(r, dir);
 
         // viscosity force
         float lap = LaplacianKernel(r);
-        viscosityForce += viscosity * j1.mass * ((j1.velocity - i1.velocity) / j1.density) * lap;
+        viscosityForce += viscosity * (j1.mass / safeDensity_j) * (j1.velocity - i1.velocity) * lap;      
       }
-
-      glm::vec3 gravityForce = glm::vec3(0.0f, -gravity, 0.0f) * particles[i].mass;
-
-      float safeDensity = std::max(particles[i].density, 1e-6f);
-
-      // divided by density because its tiny volumes of fluid (not each particle) --> density is mass per volume
-      particles[i].acceleration = (pressureForce + viscosityForce + gravityForce) / safeDensity;
+      
+      i1.acceleration  = pressureForce + viscosityForce;
+      i1.acceleration += glm::vec3(0.0f, -gravity, 0.0f);
     }
   }
 
@@ -179,7 +179,7 @@ class Fluid{
         neighborCache[i] = spatialGrid.checkForNeighbors(particles, i);
     }
 
-    getDensity();   
+    getDensity();     
     getPressure();   
     computeTotalForce();
   }

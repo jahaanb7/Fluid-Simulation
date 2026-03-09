@@ -41,8 +41,9 @@ glm::vec3 velocityColor(float speed, float maxSpeed = 3.0f){
 
   float s = std::min(speed / maxSpeed, 1.0f);
 
-  glm::vec3 low(0.08f, 0.35f, 0.95f);   
-  glm::vec3 high(1.00f, 0.55f, 0.05f);
+  // low --> navy blue, high --> sky blue
+  glm::vec3 low(0.00f, 0.20f, 0.87f);   
+  glm::vec3 high(0.53, 0.61, 0.92);
 
   return glm::mix(low, high, s);
 }
@@ -76,12 +77,14 @@ void circleCollision(){
 
 void update(float deltaTime, float WIDTH, float HEIGHT, float DEPTH){
 
-  fluid.updateFluid();
-
   for(auto& particle : fluid.particles){
-    VerletIntegration(particle, deltaTime);
+    particle.velocity += particle.acceleration * deltaTime;
+    particle.position += particle.velocity * deltaTime;  
+
     particle.boundaryCollision(WIDTH, HEIGHT, DEPTH);
   }
+
+  fluid.updateFluid();
 
   glEnable(GL_LIGHTING);
 
