@@ -17,7 +17,7 @@ class Fluid{
     std::vector<std::vector<int>> neighborCache;
 
     const float h = 0.2f;
-    const float targetDensity = 50.0f;
+    const float targetDensity = 250.0f;
     const float stiffness = 0.7f;
     const float viscosity = 0.08f;
     const float gravity = 2.0f;
@@ -166,7 +166,7 @@ class Fluid{
       }
       
       i1.acceleration  = pressureForce + viscosityForce;
-      i1.acceleration += glm::vec3(0.0f, -gravity, 0.0f);
+      i1.acceleration += glm::vec3(0.0f, -gravity, 0.0f) * i1.mass;
     }
   }
 

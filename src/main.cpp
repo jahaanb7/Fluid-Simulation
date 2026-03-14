@@ -31,10 +31,10 @@ const float farPlane = 5000.0f;
 bool mouseLock = false;
 
 // Variables for particle grid arrangement
-const int rows = 25;
-const int cols = 25;
-const int zRange = 25;
-const float spacing = 0.07f;
+const int rows = 15;
+const int cols = 15;
+const int zRange = 15;
+const float spacing = 0.08f;
 
 const float radius = spacing * 0.5f;
 const float camSpeed = 0.5f;

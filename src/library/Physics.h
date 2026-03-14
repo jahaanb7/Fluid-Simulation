@@ -78,6 +78,10 @@ void circleCollision(){
 void update(float deltaTime, float WIDTH, float HEIGHT, float DEPTH){
 
   for(auto& particle : fluid.particles){
+    if (particle.isBoundary){
+      continue;
+    }
+
     particle.velocity += particle.acceleration * deltaTime;
     particle.position += particle.velocity * deltaTime;  
 

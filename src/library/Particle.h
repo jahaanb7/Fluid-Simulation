@@ -19,6 +19,9 @@ class Particle{
     float mass;
     float radius;
 
+    // boundary particles to prevent highly dense particles near the boundary
+    bool isBoundary = false; 
+
     Particle(glm::vec3 pos, glm::vec3 vel, float r){
       position = pos;
       velocity = vel;
