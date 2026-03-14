@@ -10,6 +10,9 @@
 #include "library/Particle.h"
 #include "library/Camera.h"
 
+#include <imgui/imgui.h>
+#include <imgui/backends/imgui_impl_glfw.h>
+#include <imgui/backends/imgui_impl_opengl3.h>
 
 // Global Variables:
 
@@ -65,8 +68,14 @@ int main(){
     return -1;
   }
   
-  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
   glfwMakeContextCurrent(window);
+
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+  ImGui_ImplGlfw_InitForOpenGL(window, true);
+  ImGui_ImplOpenGL3_Init("#version 120");
+  ImGui::StyleColorsDark();
 
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)){
     std::cout << "Failed to initialize GLAD" << std::endl;
@@ -137,9 +146,40 @@ int main(){
     update(deltaTime, WIDTH, HEIGHT, DEPTH);
     drawBoundaryBox(WIDTH, HEIGHT, DEPTH);
 
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+      
+    ImGui::Begin("Fluid Controls");
+      ImGui::SliderFloat("Target Density", &fluid.targetDensity, 0.0f, 500.0f);
+      ImGui::SliderFloat("Stiffness", &fluid.stiffness, 0.0f, 5.0f);
+      ImGui::SliderFloat("Viscosity", &fluid.viscosity, 0.0f, 1.0f);
+      ImGui::SliderFloat("Gravity", &fluid.gravity, 0.0f, 10.0f);
+    ImGui::End();
+
+    if(ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)){
+      glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+      mouseLock = true;
+    } 
+    
+    else {
+      glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+      mouseLock = false;
+    }
+
+    cam.CameraSystem(window);
+    cam.MoveCamera(window, deltaTime * 5);
+
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
     glfwSwapBuffers(window);
     glfwPollEvents();    
   }
+
+  ImGui_ImplOpenGL3_Shutdown();
+  ImGui_ImplGlfw_Shutdown();
+  ImGui::DestroyContext();
 
   glfwTerminate();
   return 0;

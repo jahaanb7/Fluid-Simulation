@@ -16,11 +16,11 @@ class Fluid{
     std::vector<Particle> particles;
     std::vector<std::vector<int>> neighborCache;
 
-    const float h = 0.2f;
-    const float targetDensity = 250.0f;
-    const float stiffness = 0.7f;
-    const float viscosity = 0.08f;
-    const float gravity = 2.0f;
+    float h = 0.2f;
+    float targetDensity = 250.0f;
+    float stiffness = 0.7f;
+    float viscosity = 0.08f;
+    float gravity = 2.0f;
 
     // constants for smoothing kernel funcitions:
     const float h2 = h*h;
