@@ -68,7 +68,7 @@ int main(){
     return -1;
   }
   
-  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
+  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
   glfwMakeContextCurrent(window);
 
   IMGUI_CHECKVERSION();
@@ -129,10 +129,12 @@ int main(){
     ImGui::NewFrame();
       
     ImGui::Begin("Fluid Controls");
+
       ImGui::SliderFloat("Target Density", &fluid.targetDensity, 0.0f, 500.0f);
-      ImGui::SliderFloat("Stiffness", &fluid.stiffness, 0.0f, 5.0f);
+      ImGui::SliderFloat("Stiffness", &fluid.stiffness, 0.0f, 100.0f);
       ImGui::SliderFloat("Viscosity", &fluid.viscosity, 0.0f, 1.0f);
-      ImGui::SliderFloat("Gravity", &fluid.gravity, 0.0f, 10.0f);
+      ImGui::SliderFloat("Gravity", &fluid.gravity, -10.0f, 10.0f);
+
       ImGui::Button("Press M for Mouse Lock", ImVec2(0.0f, 0.0f));
     ImGui::End();
 
