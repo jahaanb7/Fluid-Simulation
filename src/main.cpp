@@ -31,7 +31,7 @@ const float nearPlane =  0.1f;
 const float farPlane = 5000.0f;
 
 // Disable mouse movement
-bool mouseLock = false;
+bool mouseLock = true;
 
 // Variables for particle grid arrangement
 const int rows = 15;
@@ -45,7 +45,7 @@ const float camSpeed = 0.5f;
 double lastFrame = 0.0f; 
 
 //Initialize camera
-Camera cam(0.5f, 1.0f,  6.0f, camSpeed, mouseLock);
+Camera cam(0.0f, 0.0f,  6.0f, camSpeed);
 
 // resize the window
 void framebuffer_size_callback(GLFWwindow* window, int width, int height){
@@ -68,7 +68,7 @@ int main(){
     return -1;
   }
   
-  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
   glfwMakeContextCurrent(window);
 
   IMGUI_CHECKVERSION();
@@ -124,8 +124,30 @@ int main(){
     glLoadIdentity();
     glLoadMatrixf(glm::value_ptr(projection));
 
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+      
+    ImGui::Begin("Fluid Controls");
+      ImGui::SliderFloat("Target Density", &fluid.targetDensity, 0.0f, 500.0f);
+      ImGui::SliderFloat("Stiffness", &fluid.stiffness, 0.0f, 5.0f);
+      ImGui::SliderFloat("Viscosity", &fluid.viscosity, 0.0f, 1.0f);
+      ImGui::SliderFloat("Gravity", &fluid.gravity, 0.0f, 10.0f);
+      ImGui::Button("Press M for Mouse Lock", ImVec2(0.0f, 0.0f));
+    ImGui::End();
+
+    if(glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS){
+      if(!mouseLock){
+        mouseLock = true;
+      }
+      else{
+        mouseLock = false;
+      }
+    }
+
     // View pipeline (Camera, ViewModel Matrix)
     cam.CameraSystem(window);
+    cam.setMouseLock(mouseLock);
 
     glm::vec3 camPosition = cam.getPosition();
     glm::vec3 forward = cam.get_kHat();
@@ -143,35 +165,11 @@ int main(){
     GLfloat light[] = {camPosition.x, camPosition.y, camPosition.z, 1.0f};
     glLightfv(GL_LIGHT0, GL_POSITION, light);
 
-    update(deltaTime, WIDTH, HEIGHT, DEPTH);
-    drawBoundaryBox(WIDTH, HEIGHT, DEPTH);
-
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
-      
-    ImGui::Begin("Fluid Controls");
-      ImGui::SliderFloat("Target Density", &fluid.targetDensity, 0.0f, 500.0f);
-      ImGui::SliderFloat("Stiffness", &fluid.stiffness, 0.0f, 5.0f);
-      ImGui::SliderFloat("Viscosity", &fluid.viscosity, 0.0f, 1.0f);
-      ImGui::SliderFloat("Gravity", &fluid.gravity, 0.0f, 10.0f);
-    ImGui::End();
-
-    if(ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)){
-      glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-      mouseLock = true;
-    } 
-    
-    else {
-      glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-      mouseLock = false;
-    }
-
-    cam.CameraSystem(window);
-    cam.MoveCamera(window, deltaTime * 5);
-
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+    update(deltaTime, WIDTH, HEIGHT, DEPTH);
+    drawBoundaryBox(WIDTH, HEIGHT, DEPTH);
 
     glfwSwapBuffers(window);
     glfwPollEvents();    

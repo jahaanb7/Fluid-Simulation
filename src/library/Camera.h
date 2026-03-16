@@ -31,11 +31,10 @@ class Camera{
     double currentPitch = 0.0;
     double currentYaw = 0.0;
 
-    Camera(double x, double y, double z, double cameraSpeed, bool lockMouse){
+    Camera(double x, double y, double z, double cameraSpeed){
       camPosition = glm::vec3(x,y,z);
       camSpeed = cameraSpeed;
       orientation = Quaternion(1.0f,0.0f,0.0f,0.0f);
-      mouseLock = lockMouse;
 
       updateCam();
     }
@@ -52,6 +51,10 @@ class Camera{
     iHat= orientation.rotate(defaultRight);
     jHat= orientation.rotate(defaultUp);
 
+  }
+
+  void setMouseLock(bool lockMouse){
+    mouseLock = lockMouse;
   }
 
   void setCam(double x, double y, double z, double cameraSpeed){
