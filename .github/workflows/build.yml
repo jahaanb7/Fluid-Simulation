@@ -24,10 +24,13 @@ jobs:
             libgl1-mesa-dev libglu1-mesa-dev
 
       - name: Configure
-        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+        run: >
+          cmake -S . -B build
+          -DCMAKE_BUILD_TYPE=Release
+          -DGLFW_BUILD_WAYLAND=OFF
 
       - name: Build
-        run: cmake --build build --config Release -j 2
+        run: cmake --build build --config Release --parallel 2
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -36,4 +39,5 @@ jobs:
           path: |
             build/FluidSimulation
             build/FluidSimulation.exe
+            build/Release/FluidSimulation.exe
 
