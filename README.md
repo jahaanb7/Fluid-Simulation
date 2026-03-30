@@ -7,7 +7,7 @@ Imagine water made of a lot of tiny balls. In SPH, each ball is a “particle”
 
 The hard part is that water is continuous (it’s smooth), but particles are discrete (they are separate dots). So SPH uses a trick: it “smears” the influence of each particle over a small area using a function called a **kernel**.
 
-### The kernel idea (blurry measuring)
+### The Kernel Function
 Each particle only affects other particles within a distance called `h` (the smoothing radius).
 
 You can think of `h` like the radius of a blurry measuring circle:
