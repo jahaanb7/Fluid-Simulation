@@ -3,7 +3,9 @@
 #include <GLFW/glfw3.h>
 #include <vector>
 #include <cmath>
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 
 
 #include "Particle.h"
