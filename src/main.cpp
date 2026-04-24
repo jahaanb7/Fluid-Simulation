@@ -14,9 +14,9 @@
 #include "library/Particle.h"
 #include "library/Camera.h"
 
-#include <imgui/imgui.h>
-#include <imgui/backends/imgui_impl_glfw.h>
-#include <imgui/backends/imgui_impl_opengl3.h>
+#include <imgui.h>
+#include <backends/imgui_impl_glfw.h>
+#include <backends/imgui_impl_opengl3.h>
 
 // Global Variables:
 
@@ -76,9 +76,6 @@ int main(){
     glfwTerminate();
     return -1;
   }
-  
-  // Keep the real cursor confined to the app window.
-  // We render a software cursor when hovering the ImGui GUI.
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   glfwSetCursorPos(window, SCREENWIDTH / 2.0, SCREENHEIGHT / 2.0);
   glfwMakeContextCurrent(window);
@@ -94,7 +91,6 @@ int main(){
     return -1;
   }
 
-  // Mac does not support this Retina displays
   int fbWidth, fbHeight;
   glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
 
@@ -104,7 +100,7 @@ int main(){
   // Depth Test (DepthBuffer)
   glEnable(GL_DEPTH_TEST);
 
-  // Enable positional lighting that
+  //enable positional lighting
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
   glEnable(GL_NORMALIZE); 
@@ -133,7 +129,6 @@ int main(){
       glm::vec3 dir = diff / dist;      // outward
 
       p.velocity += dir * (strength * t);
-      // Add a bit of upward buoyancy for more visible motion.
       p.velocity += glm::vec3(0.0f, strength * 0.25f * t, 0.0f);
     }
   };
@@ -146,10 +141,8 @@ int main(){
   bool iDownPrev = false;
   bool lmbDownPrev = false;
 
-  // Render loop: handles user events and inputs
   while(!glfwWindowShouldClose(window)){
 
-    // deltaTime - frames per second (0.000167)
     double currentTime = glfwGetTime();
     double deltaTime = currentTime - lastFrame;
     deltaTime = std::min(deltaTime, 0.016);  // cap at 16ms (60fps)
@@ -251,8 +244,7 @@ int main(){
     GLfloat light[] = {camPosition.x, camPosition.y, camPosition.z, 1.0f};
     glLightfv(GL_LIGHT0, GL_POSITION, light);
 
-    // Software cursor: the real cursor is disabled to keep it inside the window.
-    // Show a simple cursor only when the ImGui GUI wants mouse input.
+
     if(wantCaptureMouse){
       ImDrawList* drawList = ImGui::GetForegroundDrawList();
       ImVec2 p = io.MousePos;
@@ -263,17 +255,15 @@ int main(){
       drawList->AddLine(ImVec2(p.x, p.y - 7.0f), ImVec2(p.x, p.y + 7.0f), IM_COL32(255,255,255,200));
     }
 
-    // Click-to-stir (impulse) when not interacting with ImGui.
     bool lmbDown = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
     if(lmbDown && !lmbDownPrev && !wantCaptureMouse && !paused){
       double mx = 0.0, my = 0.0;
       glfwGetCursorPos(window, &mx, &my);
 
-      // Convert window coordinates to NDC [-1, 1].
+      //NDC [-1, 1].
       float ndcX = (2.0f * (float)mx) / (float)fbWidth - 1.0f;
       float ndcY = 1.0f - (2.0f * (float)my) / (float)fbHeight;
 
-      // Unproject two points to get a world-space ray.
       glm::mat4 invVP = glm::inverse(projection * view);
       glm::vec4 nearClip(ndcX, ndcY, -1.0f, 1.0f);
       glm::vec4 farClip(ndcX, ndcY, 1.0f, 1.0f);
@@ -286,7 +276,6 @@ int main(){
       glm::vec3 rayOrigin = camPosition;
       glm::vec3 rayDir = glm::normalize(glm::vec3(farWorld - nearWorld));
 
-      // Intersect with a horizontal plane through the initial fluid center.
       float planeY = fluidCenter.y;
       float denom = rayDir.y;
       if(std::abs(denom) > 1e-6f){

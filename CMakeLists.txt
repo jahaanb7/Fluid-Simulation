@@ -5,13 +5,32 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 option(FLUIDSIM_FETCH_GLFW "Fetch/build GLFW from source if not found" ON)
+option(FLUIDSIM_FETCH_IMGUI "Fetch Dear ImGui when vendored sources are missing" ON)
 
 find_package(OpenGL REQUIRED)
 
 find_package(OpenMP QUIET)
 
+include(FetchContent)
+
 set(FLUIDSIM_IMGUI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/include/imgui")
 set(FLUIDSIM_IMGUI_BACKENDS_DIR "${FLUIDSIM_IMGUI_DIR}/backends")
+
+# ImGui: prefer vendored copy, fetch if missing.
+if((NOT EXISTS "${FLUIDSIM_IMGUI_DIR}/imgui.cpp") AND FLUIDSIM_FETCH_IMGUI)
+  FetchContent_Declare(
+    imgui
+    GIT_REPOSITORY https://github.com/ocornut/imgui.git
+    GIT_TAG docking
+  )
+  FetchContent_MakeAvailable(imgui)
+  set(FLUIDSIM_IMGUI_DIR "${imgui_SOURCE_DIR}")
+  set(FLUIDSIM_IMGUI_BACKENDS_DIR "${FLUIDSIM_IMGUI_DIR}/backends")
+endif()
+
+if(NOT EXISTS "${FLUIDSIM_IMGUI_DIR}/imgui.cpp")
+  message(FATAL_ERROR "Dear ImGui sources not found. Restore dependencies/include/imgui or enable FLUIDSIM_FETCH_IMGUI.")
+endif()
 
 # GLFW: prefer system, but fetch if missing.
 set(GLFW_TARGET "")
@@ -35,7 +54,6 @@ elseif(TARGET GLFW::GLFW)
 endif()
 
 if(GLFW_TARGET STREQUAL "" AND FLUIDSIM_FETCH_GLFW)
-  include(FetchContent)
   FetchContent_Declare(
     glfw
     GIT_REPOSITORY https://github.com/glfw/glfw.git
@@ -75,7 +93,7 @@ add_executable(FluidSimulation
 target_include_directories(FluidSimulation PRIVATE
   "${CMAKE_CURRENT_SOURCE_DIR}/src"
   "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/include"
-  "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/include/imgui"
+  "${FLUIDSIM_IMGUI_DIR}"
 )
 
 target_link_libraries(FluidSimulation PRIVATE
