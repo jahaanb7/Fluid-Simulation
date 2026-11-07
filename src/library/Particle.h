@@ -1,5 +1,7 @@
 #include <glm/glm.hpp>
+#ifndef FLUIDSIM_NO_GL
 #include <GLFW/glfw3.h>
+#endif
 #include <vector>
 #include <cmath>
 
@@ -72,6 +74,7 @@ class Particle{
     }
   }
 
+#ifndef FLUIDSIM_NO_GL
   void drawParticle(int numSegments){
 
     glm::vec2 center = glm::vec2(position.x, position.y);
@@ -134,4 +137,5 @@ class Particle{
       glEnd();
     }
   }
+#endif
 };

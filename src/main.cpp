@@ -42,6 +42,14 @@ float timeScale = 1.0f;
 float injectionStrength = 4.0f;
 float injectionRadius = 0.45f;
 
+// 2D or 3D (switch with the buttons in the panel, or keys 2 and 3)
+int simMode = 3;
+
+// 2D mode: a flat block at z = 0 with kernels normalised for two dimensions
+const int rows2D = 26;
+const int cols2D = 34;
+const float spacing2D = 0.07f;
+
 // Variables for particle grid arrangement
 const int rows = 15;
 const int cols = 15;
@@ -113,24 +121,34 @@ int main(){
   Particle seedParticle = particle;
 
   auto resetSimulation = [&](){
-    drawParticleGrid3D(rows, cols, zRange, spacing, seedParticle);
+    fluid.setDimensions(simMode);
+
+    if(simMode == 2){
+      // 2D settings (same as the browser version)
+      fluid.targetDensity = 120.0f;
+      fluid.stiffness = 6.0f;
+      fluid.viscosity = 0.10f;
+      fluid.gravity = 4.0f;
+
+      Particle seed2D(glm::vec3(-0.6f, -0.6f, 0.0f), glm::vec3(0.0f), spacing2D * 0.5f);
+      drawParticleGrid2D(rows2D, cols2D, spacing2D, seed2D);
+
+      fluidCenter = glm::vec3(0.0f, -1.2f, 0.0f);
+    } else {
+      fluid.targetDensity = 250.0f;
+      fluid.stiffness = 0.7f;
+      fluid.viscosity = 0.08f;
+      fluid.gravity = 2.0f;
+
+      drawParticleGrid3D(rows, cols, zRange, spacing, seedParticle);
+      fluidCenter = seedParticle.position;
+    }
+
     fluid.initParticles();
   };
 
   auto applyRadialImpulse = [&](const glm::vec3& point, float radius, float strength){
-    for(auto& p : fluid.particles){
-      if(p.isBoundary) continue;
-
-      glm::vec3 diff = p.position - point;
-      float dist = glm::length(diff);
-      if(dist <= 0.00001f || dist > radius) continue;
-
-      float t = 1.0f - (dist / radius); // 0..1 falloff
-      glm::vec3 dir = diff / dist;      // outward
-
-      p.velocity += dir * (strength * t);
-      p.velocity += glm::vec3(0.0f, strength * 0.25f * t, 0.0f);
-    }
+    radialImpulse(fluid, point, radius, strength);
   };
 
   resetSimulation();
@@ -169,6 +187,11 @@ int main(){
     ImGui::NewFrame();
       
     ImGui::Begin("Fluid Controls");
+      if(ImGui::RadioButton("2D", simMode == 2)){ simMode = 2; resetSimulation(); }
+      ImGui::SameLine();
+      if(ImGui::RadioButton("3D", simMode == 3)){ simMode = 3; resetSimulation(); }
+      ImGui::Separator();
+
       ImGui::SliderFloat("Target Density", &fluid.targetDensity, 0.0f, 500.0f);
       ImGui::SliderFloat("Stiffness", &fluid.stiffness, 0.0f, 100.0f);
       ImGui::SliderFloat("Viscosity", &fluid.viscosity, 0.0f, 1.0f);
@@ -193,6 +216,7 @@ int main(){
       ImGui::Separator();
       ImGui::TextUnformatted("Tip: Left click to stir (when not over UI).");
       ImGui::TextUnformatted("M: toggle mouse camera control.");
+      ImGui::TextUnformatted("2 / 3: switch between the 2D and 3D modes.");
     ImGui::End();
 
     ImGuiIO& io = ImGui::GetIO();
@@ -217,6 +241,9 @@ int main(){
       resetSimulation();
     }
     rDownPrev = rDown;
+
+    if(glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS && simMode != 2){ simMode = 2; resetSimulation(); }
+    if(glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS && simMode != 3){ simMode = 3; resetSimulation(); }
 
     bool iDown = glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS;
     if(iDown && !iDownPrev){
@@ -276,10 +303,12 @@ int main(){
       glm::vec3 rayOrigin = camPosition;
       glm::vec3 rayDir = glm::normalize(glm::vec3(farWorld - nearWorld));
 
-      float planeY = fluidCenter.y;
-      float denom = rayDir.y;
+      // 3D: hit the horizontal plane through the fluid; 2D: hit the z = 0 plane the fluid lives in
+      float planeValue = (simMode == 2) ? 0.0f : fluidCenter.y;
+      float originValue = (simMode == 2) ? rayOrigin.z : rayOrigin.y;
+      float denom = (simMode == 2) ? rayDir.z : rayDir.y;
       if(std::abs(denom) > 1e-6f){
-        float t = (planeY - rayOrigin.y) / denom;
+        float t = (planeValue - originValue) / denom;
         if(t > 0.0f){
           glm::vec3 hitPoint = rayOrigin + t * rayDir;
           applyRadialImpulse(hitPoint, injectionRadius, injectionStrength);

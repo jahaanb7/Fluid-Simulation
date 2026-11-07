@@ -1,6 +1,8 @@
+#pragma once
+
 #include <iostream>
+#include <algorithm>
 #include <glm/glm.hpp>
-#include <GLFW/glfw3.h>
 #include <vector>
 #include <cmath>
 #ifdef _OPENMP
@@ -18,22 +20,59 @@ class Fluid{
     std::vector<Particle> particles;
     std::vector<std::vector<int>> neighborCache;
 
+    // 3 = the original 3D simulation, 2 = a planar version (z is locked to 0)
+    int dimensions = 3;
+
     float h = 0.2f;
     float targetDensity = 250.0f;
     float stiffness = 0.7f;
     float viscosity = 0.08f;
     float gravity = 2.0f;
 
-    // constants for smoothing kernel funcitions:
-    const float h2 = h*h;
-    const float h6 = h*h*h*h*h*h;
-    const float h9 = h*h*h*h*h*h*h*h*h;
-
-    const float poly6Const = 315.0f / (64.0f * M_PI * h9);
-    const float spikyConst = 45.0f  / (M_PI * h6);
-    const float lapConst = 45.0f  / (M_PI * h6);
+    // constants for smoothing kernel funcitions (recomputed when h or the dimension changes):
+    float h2, h6, h9;
+    float poly6Const, spikyConst, lapConst;
 
     SpatialGrid spatialGrid{h};
+
+    Fluid(){
+      setKernelConstants();
+    }
+
+    /*
+    The kernels must integrate to 1 over their support, so the constants depend on the dimension:
+
+                    3D                    2D
+    Poly6     315 / (64 pi h^9)       4 / (pi h^8)
+    Spiky     45 / (pi h^6)           30 / (pi h^5)    (gradient)
+    Laplacian 45 / (pi h^6)           40 / (pi h^5)    (viscosity)
+    */
+    void setKernelConstants(){
+      h2 = h*h;
+      h6 = h2*h2*h2;
+      h9 = h6*h2*h;
+
+      if(dimensions == 2){
+        poly6Const = 4.0f  / (float(M_PI) * h6 * h2);
+        spikyConst = 30.0f / (float(M_PI) * h2 * h2 * h);
+        lapConst   = 40.0f / (float(M_PI) * h2 * h2 * h);
+      } else {
+        poly6Const = 315.0f / (64.0f * float(M_PI) * h9);
+        spikyConst = 45.0f  / (float(M_PI) * h6);
+        lapConst   = 45.0f  / (float(M_PI) * h6);
+      }
+    }
+
+    void setSmoothingRadius(float newH){
+      h = newH;
+      setKernelConstants();
+      spatialGrid = SpatialGrid(h);
+    }
+
+    void setDimensions(int dims){
+      dimensions = (dims == 2) ? 2 : 3;
+      setKernelConstants();
+    }
 
   /*
 
@@ -169,15 +208,23 @@ class Fluid{
       
       i1.acceleration  = pressureForce + viscosityForce;
       i1.acceleration += glm::vec3(0.0f, -gravity, 0.0f) * i1.mass;
+
+      if(dimensions == 2){
+        i1.acceleration.z = 0.0f;
+      }
     }
   }
 
   void updateFluid(){
     spatialGrid.build(particles);
 
+    if(neighborCache.size() != particles.size()){
+      neighborCache.resize(particles.size());
+    }
+
     #pragma omp parallel for schedule(dynamic)
 
-    for(int i = 0; i < particles.size(); i++){
+    for(int i = 0; i < (int)particles.size(); i++){
         neighborCache[i] = spatialGrid.checkForNeighbors(particles, i);
     }
 

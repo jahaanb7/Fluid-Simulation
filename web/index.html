@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fluid Simulation · SPH in the browser</title>
+  <style>
+    :root { color-scheme: dark; --bg: #0b0c0e; --ink: #ecebe7; --ink-2: #9a9ca1; --rule: #2a2c31; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--ink); font: 15px/1.45 ui-sans-serif, system-ui, sans-serif; display: grid; grid-template-rows: auto 1fr auto; }
+    header, footer { padding: 14px 18px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    h1 { font-size: 16px; margin: 0 auto 0 0; font-weight: 600; }
+    .stage { position: relative; min-height: 60vh; }
+    .stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+    canvas[data-fluid-overlay] { pointer-events: none; }
+    canvas:focus-visible { outline: 2px solid var(--ink-2); outline-offset: -2px; }
+    .seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 999px; padding: 2px; }
+    button { font: inherit; color: var(--ink); background: none; border: 1px solid var(--rule); border-radius: 999px; padding: 6px 14px; cursor: pointer; min-height: 34px; }
+    .seg button { border: 0; }
+    button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+    button:hover { border-color: var(--ink-2); }
+    button:focus-visible, input:focus-visible { outline: 2px solid var(--ink-2); outline-offset: 2px; }
+    label { display: inline-flex; gap: 8px; align-items: center; color: var(--ink-2); font-size: 13px; }
+    output { color: var(--ink); font-variant-numeric: tabular-nums; min-width: 3ch; }
+    input[type=range] { accent-color: var(--ink); width: 120px; }
+    .hint { color: var(--ink-2); font-size: 13px; }
+    .readout { font-variant-numeric: tabular-nums; color: var(--ink-2); font-size: 13px; }
+    [data-mode="3d"] .only-2d { display: none; }
+  </style>
+</head>
+<body data-fluid>
+  <header>
+    <h1>Fluid Simulation</h1>
+    <div class="seg" role="group" aria-label="View">
+      <button type="button" data-fluid-mode="2" aria-pressed="true">2D</button>
+      <button type="button" data-fluid-mode="3" aria-pressed="false">3D</button>
+    </div>
+    <button type="button" data-fluid-play aria-pressed="false">Pause</button>
+    <button type="button" data-fluid-splash>Splash</button>
+    <button type="button" data-fluid-reset>Reset</button>
+  </header>
+  <div class="stage">
+    <canvas data-fluid-gl aria-label="SPH fluid simulation. Space plays or pauses, R resets, S splashes, arrow keys turn the 3D view."></canvas>
+    <canvas data-fluid-overlay aria-hidden="true"></canvas>
+  </div>
+  <footer>
+    <label>Smoothing radius h <input type="range" data-fluid-param="h" min="0.12" max="0.32" step="0.01"><output data-fluid-out="h"></output></label>
+    <label>Viscosity <input type="range" data-fluid-param="viscosity" min="0" max="1" step="0.01"><output data-fluid-out="viscosity"></output></label>
+    <label>Gravity <input type="range" data-fluid-param="gravity" min="-4" max="10" step="0.1"><output data-fluid-out="gravity"></output></label>
+    <span class="readout only-2d">Neighbours in h: <span data-fluid-neigh>–</span></span>
+    <span class="hint" data-fluid-hint></span>
+  </footer>
+  <script type="module">
+    import { createFluidView } from './fluid-view.js';
+    createFluidView(document.body, {
+      palette: 'blue',
+      loadModule: () => import('./dist/fluid.mjs').then((m) => m.default()),
+    }).catch((err) => { document.querySelector('.stage').textContent = 'This browser cannot run the simulation: ' + err.message; });
+  </script>
+</body>
+</html>

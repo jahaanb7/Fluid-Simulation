@@ -4,4 +4,4 @@ app
 /app.dSYM
 .DS_Store
 build/
-cmake-build*/
+cmake-build*//build-web

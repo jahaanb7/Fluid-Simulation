@@ -2,6 +2,7 @@
 #include "Particle.h"
 #include <glm/glm.hpp>
 #include "Fluid.h"
+#include "Simulation.h"
 
 Fluid fluid;
 
@@ -14,27 +15,12 @@ void VerletIntegration(Particle& particle, float deltaTime){
 
 
 void drawParticleGrid3D(int rows, int columns, int zRange, float spacing, Particle& particle){
-  fluid.particles.clear();
-  fluid.particles.reserve(rows*columns*zRange);
+  seedBlock(fluid, particle.position, rows, columns, zRange, spacing, particle.radius);
+}
 
-  float offsetX = (columns - 1) * spacing/2.0f;
-  float offsetY = (rows - 1) * spacing/2.0f;
-  float offsetZ = (zRange - 1) * spacing/2.0f;
-
-  for(int z = 0; z < zRange; z++){
-    for(int i = 0; i < rows; i++){
-      for(int j = 0; j < columns; j++){
-
-        glm::vec3 gridPosition = {
-          particle.position.x + (j * spacing) - offsetX, // x moves with column
-          particle.position.y + (i * spacing) - offsetY, // y moves with row
-          particle.position.z + (z * spacing) - offsetZ  // z moves with zRange
-        };
-
-        fluid.particles.emplace_back(gridPosition, particle.velocity, particle.radius);
-      }
-    }
-  }
+// 2D mode: one flat layer at z = 0
+void drawParticleGrid2D(int rows, int columns, float spacing, Particle& particle){
+  seedBlock(fluid, particle.position, rows, columns, 1, spacing, particle.radius);
 }
 
 glm::vec3 velocityColor(float speed, float maxSpeed = 3.0f){
@@ -77,18 +63,8 @@ void circleCollision(){
 
 void update(float deltaTime, float WIDTH, float HEIGHT, float DEPTH){
 
-  for(auto& particle : fluid.particles){
-    if (particle.isBoundary){
-      continue;
-    }
-
-    particle.velocity += particle.acceleration * deltaTime;
-    particle.position += particle.velocity * deltaTime;  
-
-    particle.boundaryCollision(WIDTH, HEIGHT, DEPTH);
-  }
-
-  fluid.updateFluid();
+  // integration, boundary and SPH forces live in Simulation.h (shared with the web build)
+  stepFluid(fluid, deltaTime, WIDTH, HEIGHT, DEPTH);
 
   glEnable(GL_LIGHTING);
 

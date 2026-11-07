@@ -66,7 +66,40 @@ build\\FluidSimulation.exe  # Windows
 - `Space`: pause/unpause simulation
 - `R`: reset simulation
 - `I`: inject an impulse pulse
+- `2` / `3`: switch between the 2D and 3D modes (also in the panel)
 - Left click: “stir” the fluid at the mouse ray/plane intersection (when not over the ImGui UI)
 
 ## GUI
 Sliders for `Target Density`, `Stiffness`, `Viscosity`, `Gravity`, plus interactivity controls (`Time Scale`, impulse strength/radius).
+
+## 2D mode
+`Fluid` has a `dimensions` setting. In 2D the particles live on the z = 0 plane and the kernels use their
+two-dimensional normalisation, so density and forces stay consistent:
+
+| Kernel | 3D | 2D |
+| --- | --- | --- |
+| Poly6 (density) | 315 / (64 π h⁹) | 4 / (π h⁸) |
+| Spiky gradient (pressure) | 45 / (π h⁶) | 30 / (π h⁵) |
+| Laplacian (viscosity) | 45 / (π h⁶) | 40 / (π h⁵) |
+
+`setSmoothingRadius(h)` recomputes these constants and rebuilds the spatial grid, so `h` can change while
+the simulation runs.
+
+## In the browser
+`web/` runs the same SPH code as WebAssembly. `src/library/Simulation.h` holds the GL-free time step that
+both builds call; `web/fluid_wasm.cpp` exposes it to JavaScript, and `web/fluid-view.js` draws it with WebGL2:
+
+- **2D:** particles are splatted into a density texture and thresholded into a liquid surface. Drag to stir,
+  click to splash, and hover to see the smoothing circle `h` and how many neighbours fall inside it.
+- **3D:** each particle is a shaded sphere impostor in a tank. Drag to orbit, scroll to zoom, click to splash.
+
+The browser's 3D preset uses a narrower tank and a higher stiffness (8 instead of 0.7) so the volume holds
+its shape on screen; the grid, spacing, `h`, density, viscosity and gravity match `main.cpp`.
+
+Build (needs [Emscripten](https://emscripten.org)):
+```bash
+emcmake cmake -S . -B build-web
+cmake --build build-web          # writes web/dist/fluid.mjs (wasm embedded)
+python3 -m http.server -d web    # open http://localhost:8000
+```
+
